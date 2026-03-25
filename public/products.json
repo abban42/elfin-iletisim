@@ -3,12 +3,14 @@
 ```json
 {
   "tip": "cihaz",
+  "kategori": "TELEFON",
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
   "fiyat": 51000,
   "bayi_primi": 2000,
-  "kategori": "telefon"
+  "eklenme_tarihi": "2025-01-23",
+  "durum": "aktif"
 }
 ```
 
@@ -17,21 +19,16 @@
 ## 📊 ÖZET RAPOR
 
 ✅ **1 cihaz eklendi**
-- Marka: Apple
-- Model: iPhone 15 128GB
+- Apple iPhone 15 128GB
 - Fiyat: 51.000 TL
 - Bayi Primi: 2.000 TL
 
 ✅ **Güncellenen Sistemler:**
-- CRM (Supabase) ✓
-- Web Sitesi bekleniyor (onay ver güncellenir)
-- Sosyal medya postu hazır (onay ver paylaşılır)
+- CRM (Supabase) → Eklendi
+- Web Sitesi → Güncelleme hazır
+- Stok Takip → Kayıt altında
 
 ---
 
-📱 **Başka bir cihaz eklemek ister misin veya sosyal medya postu hazırlayalım mı?**
-
-Örnek komutlar:
-- "Sosyal medya postu yap"
-- "Web sitesini güncelle"
-- "Başka cihaz ekle"
+📱 **Sosyal Medya Postu İster misin?**
+"Sosyal medya postu yap" dersen iPhone 15 için Instagram/Facebook içeriği hazırlıyorum! 🚀
