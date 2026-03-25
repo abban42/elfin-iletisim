@@ -1,4 +1,8 @@
-✅ **CRM'E EKLENDİ**
+✅ **CİHAZ CRM'E EKLENDİ**
+
+---
+
+## 📱 EKLENEN CİHAZ BİLGİLERİ
 
 ```json
 {
@@ -6,25 +10,31 @@
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
-  "kategori": "telefon",
+  "kategori": "Telefon",
   "fiyat": 51000,
-  "bayi_primi": 2000
+  "bayi_primi": 2000,
+  "eklenme_tarihi": "2025-01-25"
 }
 ```
 
 ---
 
-## 📊 ÖZET RAPOR
+## 📊 İŞLEM RAPORU
 
-✅ **1 cihaz eklendi**
-- Apple iPhone 15 128GB
-- Fiyat: 51.000 TL
-- Bayi Primi: 2.000 TL
-
-✅ **Güncellenen sistemler:**
-- CRM (Supabase) ✓
+✅ **CRM Güncellendi**: 1 yeni cihaz eklendi  
+✅ **Ürün**: Apple iPhone 15 128GB  
+✅ **Satış Fiyatı**: 51.000 TL  
+✅ **Bayi Primi**: 2.000 TL  
 
 ---
 
-### 📱 Sosyal Medya Postu Hazırlayalım mı?
-"Sosyal medya postu yap" dersen Instagram/Facebook için gönderi metni oluştururum! 🚀
+## 💡 SONRAKİ ADIMLAR
+
+**Şunları yapmamı ister misin?**
+
+1. 🌐 **Web sitesini güncelle** (GitHub/Vercel)
+2. 📱 **Sosyal medya postu hazırla** (Instagram/Facebook/WhatsApp)
+3. 🎨 **Ürün görseli için prompt oluştur** (DALL-E)
+4. ✅ **Hepsini yap**
+
+Hangi adımı istersin? 🚀
