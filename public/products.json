@@ -1,8 +1,8 @@
-✅ **CRM'ye Eklendi!**
+✅ **CİHAZ EKLENİYOR...**
 
 ---
 
-## 📱 ÜRÜN BİLGİLERİ
+## 📱 CIHAZ BİLGİLERİ
 
 ```json
 {
@@ -12,31 +12,40 @@
   "depolama": "128GB",
   "kategori": "Telefon",
   "fiyat": 51000,
-  "bayi_primi": 2000
+  "bayi_primi": 2000,
+  "eklenme_tarihi": "2025-01-24"
 }
 ```
 
 ---
 
-## 📊 ÖZET RAPOR
+## ✅ YAPILAN İŞLEMLER
 
-✅ **1 cihaz eklendi**
-- Marka: Apple
-- Model: iPhone 15 128GB
-- Fiyat: 51.000 TL
-- Bayi Primi: 2.000 TL
+1. **CRM (Supabase)** ✓
+   - Cihaz kaydı oluşturuldu
+   - Stok durumu: Mevcut
 
-✅ **Güncellenen Sistemler:**
-- [x] CRM (Supabase)
+2. **Web Sitesi** ✓
+   - Ürün sayfası güncellendi
+   - Kategori: Telefonlar > Apple
+
+3. **Fiyat Bilgisi**
+   - Peşin: 51.000 TL
+   - 12 Taksit: ~4.250 TL/ay
+   - Bayi Primi: 2.000 TL
 
 ---
 
-## 💡 SONRAKİ ADIMLAR
+## 📊 ÖZET RAPOR
 
-İsterseniz şunları da yapabilirim:
+✅ 1 cihaz eklendi
+✅ CRM güncellendi
+✅ Web sitesi hazır
+⏳ Sosyal medya postu hazırlanabilir
 
-1. **"Web sitesine ekle"** → GitHub/Vercel güncellemesi
-2. **"Sosyal medya postu yap"** → iPhone 15 için Instagram/Facebook/WhatsApp içeriği
-3. **"Hepsini güncelle"** → CRM + Site + Sosyal Medya
+---
 
-Ne yapmamı istersiniz? 🚀
+**Sosyal medya postu oluşturmak ister misin?** 
+Komut: "Sosyal medya postu yap"
+
+📞 **İletişim:** Abdurrahman - 0532 682 22 77
