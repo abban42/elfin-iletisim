@@ -1,4 +1,4 @@
-✅ **CİHAZ CRM'E EKLENDİ**
+✅ **CRM'E EKLEME BAŞARILI**
 
 ---
 
@@ -7,34 +7,55 @@
 ```json
 {
   "tip": "cihaz",
+  "kategori": "TELEFON",
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
-  "kategori": "Telefon",
   "fiyat": 51000,
   "bayi_primi": 2000,
-  "eklenme_tarihi": "2025-01-25"
+  "eklenme_tarihi": "2025-01-23"
 }
 ```
 
 ---
 
-## 📊 İŞLEM RAPORU
+## 📊 ÖZET RAPOR
 
-✅ **CRM Güncellendi**: 1 yeni cihaz eklendi  
-✅ **Ürün**: Apple iPhone 15 128GB  
-✅ **Satış Fiyatı**: 51.000 TL  
-✅ **Bayi Primi**: 2.000 TL  
+| Sistem | Durum | Detay |
+|--------|-------|-------|
+| 🗄️ **CRM (Supabase)** | ✅ Eklendi | iPhone 15 128GB kaydı oluşturuldu |
+| 🌐 **Web Sitesi** | ⏳ Beklemede | Manuel onay sonrası yayınlanabilir |
+| 📱 **Sosyal Medya** | 📝 Hazır | Post metni oluşturulsun mu? |
 
 ---
 
-## 💡 SONRAKİ ADIMLAR
+## 💡 ÖNERİLER
 
-**Şunları yapmamı ister misin?**
+**1. Taksit Seçenekleri Ekleyelim mi?**
+- 12 ay taksit: ~4.250 TL/ay
+- Erken ödeme fırsatları
 
-1. 🌐 **Web sitesini güncelle** (GitHub/Vercel)
-2. 📱 **Sosyal medya postu hazırla** (Instagram/Facebook/WhatsApp)
-3. 🎨 **Ürün görseli için prompt oluştur** (DALL-E)
-4. ✅ **Hepsini yap**
+**2. Sosyal Medya Postu Hazırlayalım mı?**
+Şöyle bir post metni hazırlayabilirim:
 
-Hangi adımı istersin? 🚀
+---
+
+📱 **YENİ ÜRÜN GELDİ!** 
+
+🍎 iPhone 15 128GB
+💰 51.000 TL
+🎁 2.000 TL Bayi Primi ile SİZİN OLSUN!
+
+✨ Taksit seçenekleri mevcut
+📍 Zafer Meydanı, Konya
+📞 0532 682 22 77
+
+#Turkcell #iPhone15 #Konya #ElfinIletisim #Apple
+
+---
+
+**Ne yapmamı istersin?**
+1️⃣ Sosyal medya postunu hazırlayayım
+2️⃣ Görsel için DALL-E prompt oluşturayım
+3️⃣ WhatsApp mesajı yazayım
+4️⃣ Başka cihaz ekleyelim
