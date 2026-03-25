@@ -1,19 +1,37 @@
-# ❌ EKSİK BİLGİ
+✅ **CRM'e iPhone 15 Eklendi!**
 
-Cihaz eklemek için şu bilgilere ihtiyacım var:
-
-## 📱 Gerekli Bilgiler:
-1. **Marka**: Apple? Samsung? Xiaomi? Oppo?
-2. **Model**: iPhone 15? Galaxy S24? Redmi Note?
-3. **Depolama**: ✅ 128GB (mevcut)
-4. **Fiyat**: ✅ 45.000 TL (mevcut)
-5. **Bayi Primi**: Kaç TL?
+```json
+{
+  "tip": "cihaz",
+  "marka": "Apple",
+  "model": "iPhone 15",
+  "depolama": "128GB",
+  "fiyat": 51000,
+  "bayi_primi": 2000,
+  "kategori": "telefon"
+}
+```
 
 ---
 
-## 💡 Örnek:
-**"Apple iPhone 15 128GB, fiyat 45.000 TL, bayi primi 2.500 TL"**
+## 📊 ÖZET RAPOR
 
-diye tamamlarsan hemen işleme alayım! 🚀
+✅ **1 cihaz eklendi**
+- Marka: Apple
+- Model: iPhone 15 128GB
+- Fiyat: 51.000 TL
+- Bayi Primi: 2.000 TL
 
-Yoksa cihaz listesinin **fotoğrafını/PDF'ini** atabilirsin, ben okuyayım? 📄
+✅ **Güncellenen Sistemler:**
+- CRM (Supabase) ✓
+- Web Sitesi bekleniyor (onay ver güncellenir)
+- Sosyal medya postu hazır (onay ver paylaşılır)
+
+---
+
+📱 **Başka bir cihaz eklemek ister misin veya sosyal medya postu hazırlayalım mı?**
+
+Örnek komutlar:
+- "Sosyal medya postu yap"
+- "Web sitesini güncelle"
+- "Başka cihaz ekle"
