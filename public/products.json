@@ -1,16 +1,16 @@
-✅ **CİHAZ EKLENİYOR...**
+✅ **CRM'e Başarıyla Eklendi!**
 
 ---
 
-## 📱 CIHAZ BİLGİLERİ
+## 📱 Eklenen Cihaz Bilgileri
 
 ```json
 {
   "tip": "cihaz",
+  "kategori": "telefon",
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
-  "kategori": "Telefon",
   "fiyat": 51000,
   "bayi_primi": 2000,
   "eklenme_tarihi": "2025-01-24"
@@ -19,33 +19,31 @@
 
 ---
 
-## ✅ YAPILAN İŞLEMLER
+## 📊 İşlem Özeti
 
-1. **CRM (Supabase)** ✓
-   - Cihaz kaydı oluşturuldu
-   - Stok durumu: Mevcut
-
-2. **Web Sitesi** ✓
-   - Ürün sayfası güncellendi
-   - Kategori: Telefonlar > Apple
-
-3. **Fiyat Bilgisi**
-   - Peşin: 51.000 TL
-   - 12 Taksit: ~4.250 TL/ay
-   - Bayi Primi: 2.000 TL
+| Alan | Değer |
+|------|-------|
+| **Marka** | Apple |
+| **Model** | iPhone 15 |
+| **Depolama** | 128GB |
+| **Satış Fiyatı** | 51.000 TL |
+| **Bayi Primi** | 2.000 TL |
+| **Kazanç Marjı** | %3.92 |
 
 ---
 
-## 📊 ÖZET RAPOR
+## 💡 Ek Bilgiler
 
-✅ 1 cihaz eklendi
-✅ CRM güncellendi
-✅ Web sitesi hazır
-⏳ Sosyal medya postu hazırlanabilir
+- **Taksit Seçeneği**: 12 aya varan taksit imkanı
+- **Garanti**: 2 yıl Apple Türkiye garantisi
+- **Stok Durumu**: Aktif olarak satışta
 
 ---
 
-**Sosyal medya postu oluşturmak ister misin?** 
-Komut: "Sosyal medya postu yap"
+## 🎯 Sonraki Adımlar
 
-📞 **İletişim:** Abdurrahman - 0532 682 22 77
+1️⃣ **Web sitesine eklemek ister misin?**
+2️⃣ **Sosyal medya postu hazırlayayım mı?**
+3️⃣ **WhatsApp için tanıtım metni oluşturayım mı?**
+
+Komut ver, hemen hazırlayayım! 🚀
