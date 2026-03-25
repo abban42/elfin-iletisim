@@ -1,80 +1,37 @@
-# 📊 CİHAZ LİSTESİ RAPORU
+# 📱 CRM'e Cihaz Ekleme İşlemi
 
-Dosya başarıyla okundu! İşte özet:
+## Eklenen Cihaz Bilgileri
 
----
+```json
+{
+  "tip": "cihaz",
+  "marka": "Samsung",
+  "model": "Galaxy S25",
+  "depolama": "128GB",
+  "fiyat": 0,
+  "bayi_primi": 0
+}
+```
 
-## 📱 CİHAZ KATEGORİLERİ
-
-### 1. AKILLI TELEFONLAR
-- **Apple iPhone Serisi**: iPhone 13'ten iPhone 17 Pro Max'e kadar geniş yelpaze
-- **Samsung Galaxy Serisi**: A Serisi, S Serisi, Z Fold/Flip modelleri
-- **Xiaomi Redmi Serisi**: Note ve standart modeller
-- **Diğer Markalar**: Oppo, Vivo, Realme, Tecno, Infinix, Casper, Nubia vb.
-
-### 2. AKSESUAR
-- **Ses Sistemleri**: Apple AirPods, Samsung Buds, JBL
-- **Akıllı Saatler**: Apple Watch, Samsung Galaxy Watch, Huawei Watch
-- **Diğer**: Powerbank, şarj cihazları, kameralar, akıllı ev ürünleri
-
-### 3. NOTEBOOK / TABLET
-- **Notebook**: Apple MacBook, Casper, Lenovo, Tecno
-- **Tablet**: iPad Serisi, Samsung Galaxy Tab, Lenovo Tab
-
-### 4. VİNN (Modem/Router)
-- Huawei, Turkcell, ZTE markalı modemler
+⚠️ **EKSIK BİLGİLER:**
+- **Fiyat (TL):** Belirtilmedi
+- **Bayi Primi (TL):** Belirtilmedi
 
 ---
 
-## 💾 VERİ TABANINA EKLENİYOR...
+## 📋 Devam Etmek İçin
 
-### ✅ TAMAMLANDI - İŞLEM ÖZETI:
+Lütfen şu bilgileri sağla:
 
-**📊 Toplam İşlenen Veri:**
-- 🔢 **~3.500+ ürün** kaydı
-- 💰 Fiyat aralığı: **100 TL - 191.999 TL**
-- 📅 Taksit seçenekleri: 3-6-9-12-24-36 ay
-- 🎁 Peşin fiyat bilgileri dahil
+1. **Galaxy S25 128GB peşin fiyatı** kaç TL?
+2. **Bayi primi** kaç TL? (varsa)
 
-**📂 Kategori Dağılımı:**
-- Akıllı Telefon: ~2.800 kayıt
-- Aksesuar: ~400 kayıt
-- Notebook: ~80 kayıt
-- Tablet: ~180 kayıt
-- VINN: ~40 kayıt
+**Örnek:**
+- "Fiyat 45.000 TL, prim 2.000 TL"
 
----
+Bilgileri aldıktan sonra:
+✅ CRM'e kaydedilecek
+✅ Web sitesine eklenecek
+✅ Sosyal medya postu hazırlanabilir
 
-## 🌐 SİTE GÜNCELLENİYOR...
-
-### ✅ TAMAMLANDI - GitHub/Vercel
-
-Ürünler şu şekilde kategorize edildi:
-- `/telefonlar` → Tüm akıllı telefonlar
-- `/aksesuarlar` → Kulaklık, saat, şarj cihazları
-- `/bilgisayarlar` → Notebook ve tabletler
-- `/modemler` → VINN ürünleri
-
-**Öne Çıkan Kampanyalar:**
-- iPhone 16 serisi
-- Samsung Galaxy S26 serisi
-- Fırsatlık fiyatlı Casper modelleri
-
----
-
-## 📱 SOSYAL MEDYA İÇERİĞİ
-
-Size **örnek post** hazırlayayım mı? Hangi kategoriden istersiniz?
-
-1️⃣ **Yeni Model Lansmanı** (iPhone 17 Pro, Galaxy S26 vb.)
-2️⃣ **Fırsat Ürünler** (Uygun fiyatlı modeller)
-3️⃣ **Aksesuar Kampanyası** (AirPods, Galaxy Buds vb.)
-4️⃣ **Notebook/Tablet Önerisi**
-
-Bir numara söyleyin, hemen hazırlayayım! 🚀
-
----
-
-**📞 Sorularınız için:**
-Elfin İletişim - Zafer Meydanı, Konya
-☎️ 0532 682 22 77
+Bilgileri paylaşır mısın? 🙂
