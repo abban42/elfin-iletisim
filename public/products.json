@@ -1,34 +1,40 @@
-✅ **CRM'e iPhone 15 Eklendi!**
+✅ **CRM'e Cihaz Eklendi!**
+
+---
+
+**EKLENEN CİHAZ BİLGİLERİ:**
 
 ```json
 {
   "tip": "cihaz",
-  "kategori": "TELEFON",
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
   "fiyat": 51000,
   "bayi_primi": 2000,
-  "eklenme_tarihi": "2025-01-23",
-  "durum": "aktif"
+  "kategori": "Telefon"
 }
 ```
 
 ---
 
-## 📊 ÖZET RAPOR
+**📊 İŞLEM ÖZETİ:**
 
-✅ **1 cihaz eklendi**
-- Apple iPhone 15 128GB
+✅ **CRM (Supabase):** iPhone 15 128GB eklendi
 - Fiyat: 51.000 TL
 - Bayi Primi: 2.000 TL
-
-✅ **Güncellenen Sistemler:**
-- CRM (Supabase) → Eklendi
-- Web Sitesi → Güncelleme hazır
-- Stok Takip → Kayıt altında
+- Kategori: Telefon
 
 ---
 
-📱 **Sosyal Medya Postu İster misin?**
-"Sosyal medya postu yap" dersen iPhone 15 için Instagram/Facebook içeriği hazırlıyorum! 🚀
+**📱 SOSYAL MEDYA POSTU İSTER MİSİNİZ?**
+
+İsterseniz bu cihaz için Instagram/Facebook/WhatsApp postu hazırlayabilirim. 
+
+"Sosyal medya postu yap" demeniz yeterli! 🚀
+
+---
+
+**İletişim:** 
+📞 Abdurrahman: 0532 682 22 77  
+📍 Elfin İletişim - Zafer Meydanı, Konya
