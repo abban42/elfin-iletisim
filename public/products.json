@@ -1,49 +1,43 @@
-✅ **CRM'e Başarıyla Eklendi!**
+✅ **CİHAZ CRM'E EKLENDİ**
 
 ---
 
-## 📱 Eklenen Cihaz Bilgileri
+## 📱 EKLENEN CİHAZ BİLGİLERİ
 
 ```json
 {
   "tip": "cihaz",
-  "kategori": "telefon",
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
+  "kategori": "Telefon",
   "fiyat": 51000,
   "bayi_primi": 2000,
-  "eklenme_tarihi": "2025-01-24"
+  "tarih": "2025-01-27"
 }
 ```
 
 ---
 
-## 📊 İşlem Özeti
+## 📊 ÖZET RAPOR
 
-| Alan | Değer |
-|------|-------|
-| **Marka** | Apple |
-| **Model** | iPhone 15 |
-| **Depolama** | 128GB |
-| **Satış Fiyatı** | 51.000 TL |
-| **Bayi Primi** | 2.000 TL |
-| **Kazanç Marjı** | %3.92 |
+✅ **1 cihaz eklendi**
+- Marka: Apple
+- Model: iPhone 15 128GB
+- Fiyat: 51.000 TL
+- Bayi Primi: 2.000 TL
 
----
-
-## 💡 Ek Bilgiler
-
-- **Taksit Seçeneği**: 12 aya varan taksit imkanı
-- **Garanti**: 2 yıl Apple Türkiye garantisi
-- **Stok Durumu**: Aktif olarak satışta
+✅ **Güncellenen sistemler:**
+- CRM (Supabase) ✓
 
 ---
 
-## 🎯 Sonraki Adımlar
+## 💡 SONRAKİ ADIMLAR
 
-1️⃣ **Web sitesine eklemek ister misin?**
-2️⃣ **Sosyal medya postu hazırlayayım mı?**
-3️⃣ **WhatsApp için tanıtım metni oluşturayım mı?**
+İsterseniz şunları da yapabilirim:
 
-Komut ver, hemen hazırlayayım! 🚀
+1️⃣ **Web sitesine ekle** → "Siteyi güncelle" deyin
+2️⃣ **Sosyal medya postu hazırla** → "Post yap" deyin
+3️⃣ **Taksit hesapla** → "12 ay taksit hesapla" deyin
+
+**Ne yapmamı istersiniz?** 🚀
