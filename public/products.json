@@ -1,16 +1,9 @@
-Dosyayı okuyamıyorum çünkü henüz yüklenmemiş. Lütfen Turkcell tarife listesini (JPEG, PDF veya Excel formatında) yükleyin, ben de:
-
-1. **Tarifeleri okuyup analiz edeceğim**
-2. **Web sitesi için JSON formatında hazırlayacağım**
-3. **GitHub'a push için gerekli kod değişikliklerini göstereceğim**
+Dosyayı görmüyorum. Lütfen tarife listesini (JPEG, PDF veya Excel) yükleyin, ben de web sitesi için tarifeler bölümünü güncelleyeyim.
 
 Dosyayı yükledikten sonra şunları yapacağım:
+1. ✅ Tarifeleri okuyup analiz edeceğim
+2. ✅ Web sitesi için JSON formatında hazırlayacağım
+3. ✅ Hedef kitleye göre kategorilendireceğim
+4. ✅ GitHub/Vercel için güncellenmiş kodu vereceğim
 
-```
-✅ Tarife adı, GB, dakika, SMS, fiyat bilgilerini çıkaracağım
-✅ Hedef kitleyi belirleyeceğim (GENEL/COCUK/YASLI/GENC/EV_INTERNET)
-✅ Web sitesi için güncel tarifeListesi.json dosyası oluşturacağım
-✅ Vercel otomatik deploy için talimat vereceğim
-```
-
-**Dosyayı yükleyin başlayalım! 📤**
+**Dosyayı yükleyin, hemen başlayalım! 📄**
