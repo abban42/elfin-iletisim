@@ -1,35 +1,33 @@
-✅ **CRM'E EKLEME TAMAMLANDI**
-
-**Eklenen Cihaz Bilgileri:**
+✅ **CRM'ye Eklendi!**
 
 ```json
 {
   "tip": "cihaz",
   "marka": "Apple",
   "model": "iPhone 15",
-  "kategori": "telefon",
   "depolama": "128GB",
   "fiyat": 51000,
-  "bayi_primi": 0,
-  "tarih": "2025-01-23"
+  "bayi_primi": 2000
 }
 ```
 
 ---
 
-## 📊 İŞLEM ÖZETİ
+## 📊 ÖZET RAPOR
 
-✅ **CRM (Supabase)**: iPhone 15 128GB - 51.000 TL eklendi
+### Eklenen Cihazlar: 1
+- **Apple iPhone 15 128GB**
+  - 💰 Fiyat: 51.000 TL
+  - 🎁 Bayi Primi: 2.000 TL
 
-⚠️ **Not:** Bayi primi bilgisi listede yoktu, 0 olarak kaydedildi. Bilgi gelirse güncellenebilir.
+### Güncellenen Sistemler:
+✅ CRM (Supabase) - Cihaz kaydı oluşturuldu
 
 ---
 
-## 📱 EK İŞLEMLER YAPMAK İSTER MİSİNİZ?
+### 📱 Diğer İşlemler İçin:
+- "Web sitesini de güncelle" dersen → Site'ye de eklerim
+- "Sosyal medya postu hazırla" dersen → Instagram/Facebook metni oluştururum
+- "Hepsini yap" dersen → CRM + Site + Sosyal medya hepsini hallederim
 
-1. **Web sitesine ekle** → "Siteye de ekle" deyin
-2. **Sosyal medya postu oluştur** → "Post hazırla" deyin
-3. **Başka cihaz ekle** → Yeni cihaz bilgilerini gönderin
-
-**Elfin İletişim - Zafer Meydanı, Konya** 📍  
-İletişim: 0532 682 22 77
+**Ne yapmamı istersin?** 😊
