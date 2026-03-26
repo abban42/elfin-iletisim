@@ -1,9 +1,21 @@
-Dosyayı görmüyorum. Lütfen tarife listesini (JPEG, PDF veya Excel) yükleyin, ben de web sitesi için tarifeler bölümünü güncelleyeyim.
+Öncelikle dosyayı görmeliyim. Lütfen tarife listesini içeren dosyayı (JPEG, PDF veya Excel) yükleyin, böylece içeriği okuyup web sitesi için uygun formatta hazırlayabilirim.
 
 Dosyayı yükledikten sonra şunları yapacağım:
-1. ✅ Tarifeleri okuyup analiz edeceğim
-2. ✅ Web sitesi için JSON formatında hazırlayacağım
-3. ✅ Hedef kitleye göre kategorilendireceğim
-4. ✅ GitHub/Vercel için güncellenmiş kodu vereceğim
 
-**Dosyayı yükleyin, hemen başlayalım! 📄**
+## İŞLEM ADIMLARIM:
+
+1. **Dosyayı Okuma** 📄
+   - Tarife adı, GB, dakika, SMS, fiyat bilgilerini çıkaracağım
+   - Hedef kitle tespiti yapacağım (Genel, Çocuk, Yaşlı, Genç, Ev İnterneti)
+
+2. **Web Sitesi İçin Formatlama** 🌐
+   - Modern ve responsive tasarıma uygun HTML/JSON formatı
+   - Fiyat vurgusu ve öne çıkan özellikler
+   - Kullanıcı dostu gösterim
+
+3. **Güncelleme Paketi Hazırlama** 📦
+   - GitHub için commit dosyası
+   - Vercel için deployment komutu
+   - Yedek alma önerisi
+
+**Dosyanızı bekliyorum! 📤**
