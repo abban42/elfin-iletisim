@@ -1,37 +1,16 @@
-✅ **TARİFE CRM'YE EKLENDİ**
+Dosyayı okuyamıyorum çünkü henüz yüklenmemiş. Lütfen Turkcell tarife listesini (JPEG, PDF veya Excel formatında) yükleyin, ben de:
 
----
+1. **Tarifeleri okuyup analiz edeceğim**
+2. **Web sitesi için JSON formatında hazırlayacağım**
+3. **GitHub'a push için gerekli kod değişikliklerini göstereceğim**
 
-## 📊 EKLENEN TARİFE BİLGİLERİ
+Dosyayı yükledikten sonra şunları yapacağım:
 
-```json
-{
-  "tip": "tarife",
-  "ad": "Avantaj 5GB",
-  "gb": 5,
-  "dakika": 3000,
-  "sms": 250,
-  "fiyat": 350,
-  "hedef_kitle": "GENEL"
-}
+```
+✅ Tarife adı, GB, dakika, SMS, fiyat bilgilerini çıkaracağım
+✅ Hedef kitleyi belirleyeceğim (GENEL/COCUK/YASLI/GENC/EV_INTERNET)
+✅ Web sitesi için güncel tarifeListesi.json dosyası oluşturacağım
+✅ Vercel otomatik deploy için talimat vereceğim
 ```
 
----
-
-## 📝 ÖZET RAPOR
-
-✅ **1 tarife** CRM'ye (Supabase) eklendi  
-✅ Tarife Adı: **Avantaj 5GB**  
-✅ Hedef Kitle: **GENEL** (Herkes için uygun)  
-✅ Aylık Fiyat: **350 TL**
-
----
-
-## 🎯 SONRAKI ADIMLAR
-
-İsterseniz:
-- 📱 "Web sitesini güncelle" diyerek siteye ekleyebilirim
-- 📣 "Sosyal medya postu yap" diyerek Instagram/Facebook içeriği hazırlayabilirim
-- 💬 "WhatsApp mesajı hazırla" diyerek müşteri paylaşımı için metin oluşturabilirim
-
-**Ne yapmamı istersiniz?** 😊
+**Dosyayı yükleyin başlayalım! 📤**
