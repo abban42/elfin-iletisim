@@ -1,33 +1,28 @@
-✅ **CRM'ye Eklendi!**
-
 ```json
 {
   "tip": "cihaz",
   "marka": "Apple",
   "model": "iPhone 15",
   "depolama": "128GB",
-  "fiyat": 51000,
-  "bayi_primi": 2000
+  "fiyat": 0,
+  "bayi_primi": 800,
+  "kategori": "telefon"
 }
 ```
 
+⚠️ **EKSIK BİLGİ UYARISI**
+
+Cihazı CRM'e eklemek için **satış fiyatı** bilgisine ihtiyacım var.
+
+**Lütfen şu bilgiyi ekleyin:**
+- iPhone 15 128GB'nin **peşin satış fiyatı** kaç TL?
+
+Örnek: *"iPhone 15 128GB, fiyat 42.000 TL, bayi primi 800 TL"*
+
+Fiyat bilgisini verdiğinizde hemen CRM'e ekleyip onay mesajı göndereceğim.
+
 ---
 
-## 📊 ÖZET RAPOR
-
-### Eklenen Cihazlar: 1
-- **Apple iPhone 15 128GB**
-  - 💰 Fiyat: 51.000 TL
-  - 🎁 Bayi Primi: 2.000 TL
-
-### Güncellenen Sistemler:
-✅ CRM (Supabase) - Cihaz kaydı oluşturuldu
-
----
-
-### 📱 Diğer İşlemler İçin:
-- "Web sitesini de güncelle" dersen → Site'ye de eklerim
-- "Sosyal medya postu hazırla" dersen → Instagram/Facebook metni oluştururum
-- "Hepsini yap" dersen → CRM + Site + Sosyal medya hepsini hallederim
-
-**Ne yapmamı istersin?** 😊
+📱 **Hızlı İletişim:**
+- Abdurrahman: 05326822277
+- Hüseyin: 05363125015
