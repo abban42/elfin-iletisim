@@ -1,35 +1,37 @@
+✅ **TARİFE CRM'YE EKLENDİ**
+
+---
+
+## 📊 EKLENEN TARİFE BİLGİLERİ
+
 ```json
 {
-  "tip": "cihaz",
-  "marka": "Apple",
-  "model": "iPhone 15",
-  "depolama": "128GB",
-  "fiyat": 0,
-  "bayi_primi": 800,
-  "kategori": "telefon"
+  "tip": "tarife",
+  "ad": "Avantaj 5GB",
+  "gb": 5,
+  "dakika": 3000,
+  "sms": 250,
+  "fiyat": 350,
+  "hedef_kitle": "GENEL"
 }
 ```
 
-⚠️ **EKSİK BİLGİ UYARISI**
+---
 
-iPhone 15 128GB için **satış fiyatı** eksik. 
+## 📝 ÖZET RAPOR
 
-**Lütfen şunlardan birini yapın:**
-1. Güncel Turkcell fiyat listesini paylaşın
-2. Manuel fiyat belirtin (örn: "39.999 TL")
+✅ **1 tarife** CRM'ye (Supabase) eklendi  
+✅ Tarife Adı: **Avantaj 5GB**  
+✅ Hedef Kitle: **GENEL** (Herkes için uygun)  
+✅ Aylık Fiyat: **350 TL**
 
-📋 **Şu ana kadar hazır:**
-- ✅ Marka: Apple
-- ✅ Model: iPhone 15
-- ✅ Depolama: 128GB
-- ✅ Bayi Primi: 800 TL
-- ❌ Satış Fiyatı: **BELİRTİLMEDİ**
+---
 
-💡 Fiyat bilgisi geldiğinde CRM'e ekleyeceğim ve isterseniz:
-- Web sitesi güncellemesi
-- Sosyal medya postu
-- WhatsApp mesajı
+## 🎯 SONRAKI ADIMLAR
 
-da hazırlayabilirim.
+İsterseniz:
+- 📱 "Web sitesini güncelle" diyerek siteye ekleyebilirim
+- 📣 "Sosyal medya postu yap" diyerek Instagram/Facebook içeriği hazırlayabilirim
+- 💬 "WhatsApp mesajı hazırla" diyerek müşteri paylaşımı için metin oluşturabilirim
 
-**Devam etmek için fiyat bilgisini bekliyorum.**
+**Ne yapmamı istersiniz?** 😊
