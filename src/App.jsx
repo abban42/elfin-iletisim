@@ -100,6 +100,12 @@ export default function App(){
   };
   const[phones,setPhones]=useState(ALL_PHONES);
   const[tariffs,setTariffs]=useState(TARIFF_CATS);
+  useEffect(() => {
+  fetch('/products.json')
+    .then(r => r.json())
+    .then(data => setD(data))
+    .catch(e => console.log('Ürün yüklenemedi:', e));
+}, []);
   useEffect(()=>{const t=setInterval(()=>setBi(i=>(i+1)%BANNERS.length),5000);return()=>clearInterval(t)},[]);
   useEffect(()=>{const t=setTimeout(()=>setShowSplash(false),4000);return()=>clearTimeout(t)},[]);
 
