@@ -994,10 +994,10 @@ function ChatFab({onClick}){
         @keyframes chatRing{0%{transform:rotate(0)}10%{transform:rotate(12deg)}20%{transform:rotate(-10deg)}30%{transform:rotate(8deg)}40%{transform:rotate(-6deg)}50%{transform:rotate(0)}100%{transform:rotate(0)}}
         @keyframes tipSlide{0%{opacity:0;transform:translateX(10px)}100%{opacity:1;transform:translateX(0)}}
       `}</style>
-      {/* Tooltip */}
-      {showTip&&<div onClick={onClick} style={{position:"absolute",bottom:70,right:0,background:"#fff",borderRadius:12,padding:"10px 14px",boxShadow:"0 4px 20px rgba(0,0,0,.12)",border:"1px solid var(--brd)",maxWidth:220,cursor:"pointer",animation:"tipSlide .3s ease-out"}}>
+      {/* Tooltip - LEFT side */}
+      {showTip&&<div onClick={onClick} style={{position:"absolute",bottom:10,right:76,background:"#fff",borderRadius:12,padding:"10px 14px",boxShadow:"0 4px 20px rgba(0,0,0,.12)",border:"1px solid var(--brd)",maxWidth:200,cursor:"pointer",animation:"tipSlide .3s ease-out"}}>
         <div style={{fontSize:11,color:"var(--txt)",fontWeight:600,lineHeight:1.4}}>{tips[tipIdx]}</div>
-        <div style={{position:"absolute",bottom:-6,right:24,width:12,height:12,background:"#fff",border:"1px solid var(--brd)",borderTop:"none",borderLeft:"none",transform:"rotate(45deg)"}}/>
+        <div style={{position:"absolute",top:"50%",right:-6,marginTop:-6,width:12,height:12,background:"#fff",border:"1px solid var(--brd)",borderTop:"none",borderLeft:"none",transform:"rotate(-45deg)"}}/>
       </div>}
       {/* AI Badge */}
       <div style={{position:"absolute",top:-6,right:-6,background:"var(--acc)",color:"#fff",fontSize:8,fontWeight:800,padding:"2px 8px",borderRadius:10,whiteSpace:"nowrap",boxShadow:"0 2px 8px rgba(0,0,0,.2)",zIndex:2}}>AI Asistan</div>
