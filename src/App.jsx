@@ -726,7 +726,21 @@ function AdminPanel({tariffs,setTariffs,onClose}){
     document.head.appendChild(s);
   });
 
-  // Process Excel file (same logic as Python script)
+  /* ── Excel İşleme (6 Kural Otomatik) ──
+     Ham Turkcell Excel sütun sırası (0-14):
+     0:Kategori 1:Segment 2:Marka 3:Model 4:URUN_ADI
+     5:ODEME_TIPI 6:SIGORTA_SECENEGI 7:vade 8:ncampaigncode
+     9:aylik_taksit_bedeli 10:olm 11:bayi_primi
+     12:toplam_vade_farki 13:toplam_kontratli_tutar 14:tskf
+     
+     Kurallar:
+     1. İlk 4 satır + son "TURKCELL GİZLİDİR" satırı silinir
+     2. Gereksiz sütunlar yok sayılır (Segment,Model,ODEME_TIPI,SIGORTA_SECENEGI,ncampaigncode,olm,bayi_primi,tskf)
+     3. Metin→Sayı dönüşümü (Türkçe format)
+     4. aylik=0 VE vade_farki=0 → Peşin satırı
+     5. Para birimi formatı (gösterim için)
+     6. Akıllı Telefon'da peşin < 5.000 ₺ → satır silinir
+  */
   const processExcel=async(file)=>{
     setUploadMsg("Excel okunuyor...");setPreview(null);
     const XLSX=await loadXLSX();
@@ -735,22 +749,27 @@ function AdminPanel({tariffs,setTariffs,onClose}){
     const ws=wb.Sheets[wb.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
 
-    // Find header row (Kategori, Marka, Model...)
-    let startRow=5;
+    // Kural 1: İlk 4 satır atla (startRow=5, header satır 4'te)
+    const startRow=5;
     const cleanNum=(v)=>{if(!v||v==="")return 0;const s=String(v).replace(/₺/g,"").replace(/\./g,"").replace(/,/g,".").trim();return parseFloat(s)||0};
 
-    const cats={telefon:[],tablet:[],notebook:[],aksesuar:[],vinn:[]};
     const models={};let curCat="";
     const offsets={telefon:0,tablet:1000,notebook:2000,aksesuar:3000,vinn:4000};
     const counters={telefon:0,tablet:0,notebook:0,aksesuar:0,vinn:0};
+    let skippedCheap=0;
 
     for(let i=startRow;i<rows.length;i++){
       const r=rows[i];if(!r||r.length<5)continue;
-      const cat=String(r[0]||"").trim();
-      const marka=String(r[1]||"").trim();
-      const model=String(r[2]||"").trim();
-      if(!marka||!model)continue;
-      if(cat)curCat=cat;
+      const rawCat=String(r[0]||"").trim();
+
+      // Kural 1: Son "TURKCELL GİZLİDİR" satırını atla
+      if(/GİZLİ/i.test(rawCat)||/TURKCELL G/i.test(rawCat))continue;
+
+      // Kural 2: Sadece gerekli sütunları oku (gereksizler yok sayılır)
+      const marka=String(r[2]||"").trim();   // C: Marka
+      const urunAdi=String(r[4]||"").trim(); // E: URUN_ADI
+      if(!marka||!urunAdi)continue;
+      if(rawCat)curCat=rawCat;
 
       let catKey="";
       if(/telefon/i.test(curCat))catKey="telefon";
@@ -760,22 +779,31 @@ function AdminPanel({tariffs,setTariffs,onClose}){
       else if(/vinn/i.test(curCat))catKey="vinn";
       else continue;
 
-      const vade=cleanNum(r[3]);
-      const aylik=cleanNum(r[4]);
-      const toplam=cleanNum(r[7]);
-      const tskf=cleanNum(r[8]);
-      const key=`${catKey}|${marka}|${model}`;
+      // Kural 3: Metin→Sayı dönüşümü
+      const vade=cleanNum(r[7]);              // H: vade
+      const aylik=cleanNum(r[9]);             // J: aylik_taksit_bedeli
+      const vadeFarki=cleanNum(r[12]);        // M: toplam_vade_farki
+      const toplamKontrat=cleanNum(r[13]);    // N: toplam_kontratli_tutar
+      const tskf=cleanNum(r[14]);             // O: tskf (peşin fiyat)
+
+      // Kural 4: Peşin tespiti (aylik=0 VE vade_farki=0)
+      const isPesin=(aylik===0&&vadeFarki===0);
+
+      // Kural 6: Akıllı Telefon'da peşin < 5.000 ₺ → atla
+      if(isPesin&&catKey==="telefon"&&toplamKontrat<5000&&toplamKontrat>0){skippedCheap++;continue}
+
+      const key=`${catKey}|${marka}|${urunAdi}`;
 
       if(!models[key]){
         const id=offsets[catKey]+counters[catKey]++;
-        models[key]={id,m:marka,n:model,p:Math.round(tskf),pi:null,t3:0,t3t:0,t6:0,t6t:0,t9:0,t9t:0,t12:0,t12t:0,t24:0,t24t:0,t36:0,t36t:0,_cat:catKey};
+        models[key]={id,m:marka,n:urunAdi,p:Math.round(tskf),pi:null,t3:0,t3t:0,t6:0,t6t:0,t9:0,t9t:0,t12:0,t12t:0,t24:0,t24t:0,t36:0,t36t:0,_cat:catKey};
       }
       const m=models[key];
       if(tskf>0&&m.p===0)m.p=Math.round(tskf);
       const v=Math.round(vade);
       if([3,6,9,12,24,36].includes(v)&&aylik>0){
         const cur=m[`t${v}`];
-        if(cur===0||aylik<cur){m[`t${v}`]=Math.round(aylik*100)/100;m[`t${v}t`]=Math.round(toplam)}
+        if(cur===0||aylik<cur){m[`t${v}`]=Math.round(aylik*100)/100;m[`t${v}t`]=Math.round(toplamKontrat)}
       }
     }
 
@@ -784,8 +812,8 @@ function AdminPanel({tariffs,setTariffs,onClose}){
     Object.values(models).forEach(m=>{const c=m._cat;delete m._cat;result[c].push(m)});
 
     const stats={telefon:result.telefon.length,tablet:result.tablet.length,notebook:result.notebook.length,aksesuar:result.aksesuar.length,vinn:result.vinn.length};
-    setPreview({result,stats});
-    setUploadMsg(`Hazır! ${stats.telefon} telefon, ${stats.tablet} tablet, ${stats.notebook} notebook, ${stats.aksesuar} aksesuar, ${stats.vinn} VINN işlendi. Yüklemek için "GitHub'a Gönder" butonuna basın.`);
+    setPreview({result,stats,skippedCheap});
+    setUploadMsg(`✅ Hazır! ${stats.telefon} telefon, ${stats.tablet} tablet, ${stats.notebook} notebook, ${stats.aksesuar} aksesuar, ${stats.vinn} VINN.${skippedCheap>0?" ("+skippedCheap+" ucuz telefon filtrelendi)":""} Yüklemek için "GitHub'a Gönder" butonuna basın.`);
   };
 
   // Upload to GitHub via API
