@@ -9,33 +9,46 @@ export default async function handler(req, res) {
   if (!GITHUB_TOKEN) return res.status(500).json({ error: 'GITHUB_TOKEN not configured' });
 
   try {
-    const { password, devices } = req.body;
+    const { password, file, data, message } = req.body;
     if (password !== 'elfin2026') return res.status(401).json({ error: 'Yanlis sifre' });
-    if (!devices) return res.status(400).json({ error: 'Veri yok' });
+
+    // Legacy support: if "devices" field exists, treat as old devices upload
+    const devices = req.body.devices;
+    const targetFile = file || 'public/devices.json';
+    const targetData = data || (devices ? { ...devices, _updated: new Date().toISOString() } : null);
+    
+    if (!targetData) return res.status(400).json({ error: 'Veri yok' });
+
+    // Allowed files whitelist
+    const ALLOWED = ['public/devices.json', 'public/promos.json', 'public/chatbot_kb_extra.json', 'public/tariffs_custom.json'];
+    if (!ALLOWED.includes(targetFile)) return res.status(400).json({ error: 'Gecersiz dosya: ' + targetFile });
 
     const REPO = 'abban42/elfin-iletisim';
-    const FILE_PATH = 'public/devices.json';
 
     // Get current file SHA (needed for update)
     let sha = null;
     try {
-      const getRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`, {
+      const getRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${targetFile}`, {
         headers: { Authorization: `token ${GITHUB_TOKEN}`, 'User-Agent': 'elfin' }
       });
       if (getRes.ok) { sha = (await getRes.json()).sha; }
     } catch (e) {}
 
-    // Commit devices.json to GitHub
-    const jsonStr = JSON.stringify({ ...devices, _updated: new Date().toISOString() });
+    // Build commit message
+    let commitMsg = message || `${targetFile} guncellendi - ${new Date().toLocaleDateString('tr-TR')}`;
+    
+    // Legacy: devices commit message
+    if (devices && !message) {
+      commitMsg = `Cihaz guncelleme - ${new Date().toLocaleDateString('tr-TR')} - ${devices.telefon?.length||0} tel, ${devices.tablet?.length||0} tab, ${devices.notebook?.length||0} nb, ${devices.aksesuar?.length||0} aks`;
+    }
+
+    const jsonStr = JSON.stringify(targetData);
     const content = Buffer.from(jsonStr).toString('base64');
     
-    const commitRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`, {
+    const commitRes = await fetch(`https://api.github.com/repos/${REPO}/contents/${targetFile}`, {
       method: 'PUT',
       headers: { Authorization: `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json', 'User-Agent': 'elfin' },
-      body: JSON.stringify({
-        message: `Cihaz guncelleme - ${new Date().toLocaleDateString('tr-TR')} - ${devices.telefon?.length||0} tel, ${devices.tablet?.length||0} tab, ${devices.notebook?.length||0} nb, ${devices.aksesuar?.length||0} aks`,
-        content, sha, branch: 'main'
-      })
+      body: JSON.stringify({ message: commitMsg, content, sha, branch: 'main' })
     });
 
     if (!commitRes.ok) {
@@ -44,9 +57,19 @@ export default async function handler(req, res) {
     }
 
     const result = await commitRes.json();
+    
+    // Legacy response for devices
+    if (devices) {
+      return res.status(200).json({
+        success: true,
+        message: `Cihaz verileri guncellendi! ${devices.telefon?.length||0} telefon, ${devices.tablet?.length||0} tablet, ${devices.notebook?.length||0} notebook, ${devices.aksesuar?.length||0} aksesuar. Site ~30 sn icinde guncellenecek.`,
+        commit: result.commit?.sha?.substring(0, 7)
+      });
+    }
+
     return res.status(200).json({
       success: true,
-      message: `Cihaz verileri guncellendi! ${devices.telefon?.length||0} telefon, ${devices.tablet?.length||0} tablet, ${devices.notebook?.length||0} notebook, ${devices.aksesuar?.length||0} aksesuar. Site ~30 sn icinde guncellenecek.`,
+      message: `${targetFile} basariyla guncellendi! Site ~30 sn icinde guncellenecek.`,
       commit: result.commit?.sha?.substring(0, 7)
     });
   } catch (err) {
