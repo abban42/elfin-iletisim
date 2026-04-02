@@ -114,6 +114,10 @@ export default function App(){
     fetch("/chatbot_kb_extra.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&d.content){setChatbotExtra(d.content);console.log("[Elfin] chatbot_kb_extra.json yüklendi")}
     }).catch(()=>{});
+
+    fetch("/tariffs_custom.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&Array.isArray(d.tarifeler)&&d.tarifeler.length>0){setTariffs(d.tarifeler);console.log("[Elfin] tariffs_custom.json yüklendi:",d.tarifeler.length,"kategori")}
+    }).catch(()=>{});
   },[]);
 
   const devices=dynDevices||allDevices;
@@ -745,6 +749,86 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const[editForm,setEditForm]=useState({title:"",sub:"",desc:"",color:"#253B80",action:"phone"});
   const colorOpts=["#253B80","#1428A0","#3A5BC7","#E8A800","#00B4D8","#25D366","#0d7c3d","#D4548A","#E17055","#7B61FF","#636e72","#FF6B6B","#1a1a2e"];
   const actionOpts=[{v:"phone",l:"Telefon"},{v:"tablet",l:"Tablet"},{v:"notebook",l:"Notebook"},{v:"aksesuar",l:"Aksesuar"},{v:"tariff",l:"Tarife"},{v:"internet",l:"Ev İnterneti"},{v:"contact",l:"İletişim"}];
+  // Tarife OCR state
+  const pdfRef=useRef(null);
+  const[tarifeMsg,setTarifeMsg]=useState("");
+  const[tarifeProcessing,setTarifeProcessing]=useState(false);
+  const[tarifeSaving,setTarifeSaving]=useState(false);
+  const[tarifePreview,setTarifePreview]=useState(null);
+
+  // Load pdf.js dynamically
+  const loadPDFJS=()=>new Promise((resolve)=>{
+    if(window.pdfjsLib)return resolve(window.pdfjsLib);
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";resolve(window.pdfjsLib)};
+    document.head.appendChild(s);
+  });
+
+  /* ── PDF → Görsel → Claude Vision OCR ── */
+  const processTarifePDF=async(file)=>{
+    setTarifeProcessing(true);setTarifePreview(null);setTarifeMsg("PDF okunuyor...");
+    try{
+      const pdfjsLib=await loadPDFJS();
+      const data=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data}).promise;
+      const pageCount=pdf.numPages;
+      setTarifeMsg(`PDF: ${pageCount} sayfa bulundu. Görseller oluşturuluyor...`);
+      
+      const images=[];
+      for(let i=1;i<=Math.min(pageCount,10);i++){
+        const page=await pdf.getPage(i);
+        const vp=page.getViewport({scale:2});
+        const canvas=document.createElement("canvas");
+        canvas.width=vp.width;canvas.height=vp.height;
+        await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+        const b64=canvas.toDataURL("image/png").split(",")[1];
+        images.push({data:b64,type:"image/png"});
+        setTarifeMsg(`Sayfa ${i}/${Math.min(pageCount,10)} işlendi...`);
+      }
+      
+      setTarifeMsg("Claude Vision ile tarifeler çıkarılıyor... (30-60sn sürebilir)");
+      const res=await fetch("/api/tariff-ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",images})});
+      const result=await res.json();
+      
+      if(result.success&&result.tariffs){
+        setTarifePreview(result.tariffs);
+        const total=result.tariffs.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
+        setTarifeMsg(`✅ ${result.tariffs.length} kategori, toplam ${total} tarife çıkarıldı! Kontrol edip "Kaydet" butonuna basın.`);
+      }else{
+        setTarifeMsg("❌ Tarife çıkarılamadı: "+(result.error||"Bilinmeyen hata"));
+      }
+    }catch(e){setTarifeMsg("❌ Hata: "+e.message)}
+    setTarifeProcessing(false);
+  };
+
+  /* ── Tarife Kaydet ── */
+  const saveTariffs=async()=>{
+    if(!tarifePreview)return;
+    setTarifeSaving(true);setTarifeMsg("GitHub'a kaydediliyor...");
+    try{
+      const total=tarifePreview.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
+      const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",file:"public/tariffs_custom.json",data:{tarifeler:tarifePreview,_updated:new Date().toISOString()},message:`Tarife guncelleme - ${tarifePreview.length} kategori, ${total} tarife - `+new Date().toLocaleDateString("tr-TR")})});
+      const d=await res.json();
+      if(d.success){setTarifeMsg("✅ Tarifeler kaydedildi! ~30sn içinde aktif olacak.");setTariffs(tarifePreview)}
+      else{setTarifeMsg("❌ "+d.error)}
+    }catch(e){setTarifeMsg("❌ "+e.message)}
+    setTarifeSaving(false);
+  };
+
+  /* ── Tarife önizlemeden tek kategori sil ── */
+  const deleteTarifeKat=(i)=>{if(tarifePreview){const np=[...tarifePreview];np.splice(i,1);setTarifePreview(np)}};
+  /* ── Mevcut tarifelere ekle (üzerine yazmak yerine birleştir) ── */
+  const mergeTariffs=()=>{
+    if(!tarifePreview)return;
+    const merged=[...tariffs];
+    tarifePreview.forEach(nk=>{
+      const existing=merged.findIndex(m=>m.ad===nk.ad);
+      if(existing>=0)merged[existing]=nk;else merged.push(nk);
+    });
+    setTarifePreview(merged);
+    setTarifeMsg("✅ Mevcut tarifelerle birleştirildi. Toplam "+merged.length+" kategori. Kaydetmek için butona basın.");
+  };
 
   // Load SheetJS dynamically
   const loadXLSX=()=>new Promise((resolve)=>{
@@ -863,7 +947,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         <button onClick={onClose} style={{background:"var(--bg2)",border:"1px solid var(--brd)",color:"var(--txt3)",width:32,height:32,borderRadius:8,fontSize:14,cursor:"pointer"}}>✕</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
-        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}
+        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("tarife","📋 Tarifeler")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}
       </div>
 
       {/* ── BİLGİ ── */}
@@ -904,6 +988,54 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
           </div>
         </div>}
         <div style={{fontSize:10,color:"var(--txt3)",marginTop:10}}>Sitede: {devices.phone.length} tel, {devices.tablet.length} tab, {devices.notebook.length} nb, {devices.aksesuar.length} aks</div>
+      </div>)}
+
+      {/* ── TARİFE YÜKLE ── */}
+      {tab==="tarife"&&(<div>
+        <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>📋 Tarife Yükle (PDF → AI OCR)</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>Turkcell tarife katalogu PDF'ini yükleyin. Claude Vision AI görselleri okuyup tarifeleri otomatik çıkaracak.</p>
+          <input ref={pdfRef} type="file" accept=".pdf" onChange={e=>{if(e.target.files[0])processTarifePDF(e.target.files[0])}} style={{display:"none"}}/>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <button onClick={()=>pdfRef.current?.click()} disabled={tarifeProcessing} style={{background:"var(--acc)",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:tarifeProcessing?.5:1}}>{tarifeProcessing?"⏳ İşleniyor...":"📁 PDF Seç"}</button>
+            {tarifePreview&&<button onClick={saveTariffs} disabled={tarifeSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:tarifeSaving?.5:1}}>{tarifeSaving?"⏳ Kaydediliyor...":"🚀 Kaydet & Yayınla"}</button>}
+            {tarifePreview&&<button onClick={mergeTariffs} style={{background:"#7B61FF",border:"none",borderRadius:8,padding:"10px 14px",color:"#fff",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>🔀 Mevcut ile Birleştir</button>}
+          </div>
+        </div>
+        {msgBox(tarifeMsg)}
+        {/* Önizleme */}
+        {tarifePreview&&<div style={{marginTop:12}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--acc)",marginBottom:8}}>Önizleme — {tarifePreview.length} Kategori</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:350,overflowY:"auto"}}>
+            {tarifePreview.map((kat,ki)=>(
+              <div key={ki} style={{background:"#fff",borderRadius:8,padding:12,border:"1px solid var(--brd)"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <span style={{fontSize:16}}>{kat.ikon||"📋"}</span>
+                    <div>
+                      <div style={{fontSize:12,fontWeight:700,color:"var(--txt)"}}>{kat.ad}</div>
+                      <div style={{fontSize:9,color:"var(--txt3)"}}>{kat.aciklama} • {kat.sure} • {kat.tip}</div>
+                    </div>
+                  </div>
+                  <button onClick={()=>deleteTarifeKat(ki)} style={{background:"#dc3545",border:"none",borderRadius:4,width:22,height:22,fontSize:9,cursor:"pointer",color:"#fff"}}>✕</button>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:4}}>
+                  {(kat.tarifeler||[]).map((t,ti)=>(
+                    <div key={ti} style={{background:"var(--bg2)",borderRadius:6,padding:"6px 8px",border:"1px solid var(--brd)"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:"var(--txt)"}}>{t.ad}</div>
+                      <div style={{fontSize:9,color:"var(--txt3)"}}>{t.icerik}</div>
+                      <div style={{fontSize:11,fontWeight:800,color:"var(--acc)",marginTop:2}}>{t.fiyat} TL/ay</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>}
+        <div style={{fontSize:10,color:"var(--txt3)",marginTop:10,lineHeight:1.6}}>
+          <strong>Mevcut:</strong> {tariffs.length} tarife kategorisi sitede aktif.
+          <br/><strong>İpucu:</strong> PDF'i yükledikten sonra önizlemeyi kontrol edin. Yanlış çıkan kategoriyi ✕ ile silebilirsiniz. "Mevcut ile Birleştir" butonu yeni tarifeleri eskilerle birleştirir.
+        </div>
       </div>)}
 
       {/* ── CHATBOT EĞİTİMİ ── */}
