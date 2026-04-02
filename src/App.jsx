@@ -101,7 +101,7 @@ export default function App(){
       if(d&&d.telefon){
         const mapD=(arr,off)=>(arr||[]).map((p,i)=>({id:p.id||(off+i),marka:p.m,model:p.n,pesin:p.p,pesinIndirimli:p.pi,...p}));
         setDynDevices({phone:mapD(d.telefon,0),tablet:mapD(d.tablet,1000),notebook:mapD(d.notebook,2000),aksesuar:mapD(d.aksesuar,3000)});
-        console.log("[Elfin] devices.json yüklendi:",d.telefon?.length,"telefon");
+        console.log("[Elfin] devices.json yüklendi:",d.telefon?.length,"tel,",d.tablet?.length,"tab,",d.notebook?.length,"nb,",d.aksesuar?.length,"aks");
       }
     }).catch(()=>console.log("[Elfin] devices.json yok, gömülü veri kullanılıyor"));
   },[]);
@@ -172,11 +172,11 @@ export default function App(){
       {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} onClose={()=>setShowAdmin(false)} />}
 
       <main style={{maxWidth:1440,margin:"0 auto",padding:"0 20px"}}>
-        {page==="home"&&<Home onNav={navigate}/>}
-        {page==="phone"&&<DevicePage data={devices.phone} title="Akıllı Telefonlar" sub="222 model — Tüm Turkcell taksit seçenekleri" backRef={backRef}/>}
-        {page==="tablet"&&<DevicePage data={devices.tablet} title="Tabletler" sub="182 model" backRef={backRef}/>}
-        {page==="notebook"&&<DevicePage data={devices.notebook} title="Notebooklar" sub="72 model" backRef={backRef}/>}
-        {page==="aksesuar"&&<DevicePage data={devices.aksesuar} title="Aksesuarlar" sub="330+ ürün" isAksesuar={true} backRef={backRef}/>}
+        {page==="home"&&<Home onNav={navigate} devices={devices}/>}
+        {page==="phone"&&<DevicePage data={devices.phone} title="Akıllı Telefonlar" sub={`${devices.phone.length} model — Tüm Turkcell taksit seçenekleri`} backRef={backRef}/>}
+        {page==="tablet"&&<DevicePage data={devices.tablet} title="Tabletler" sub={`${devices.tablet.length} model`} backRef={backRef}/>}
+        {page==="notebook"&&<DevicePage data={devices.notebook} title="Notebooklar" sub={`${devices.notebook.length} model`} backRef={backRef}/>}
+        {page==="aksesuar"&&<DevicePage data={devices.aksesuar} title="Aksesuarlar" sub={`${devices.aksesuar.length} ürün`} isAksesuar={true} backRef={backRef}/>}
         {page==="tariff"&&<TariffPage tariffs={tariffs}/>}
         {page==="internet"&&<EvInternetiPage/>}
         {page==="contact"&&<Contact/>}
@@ -341,7 +341,7 @@ function PromoCarousel({onNav}){
 }
 
 /* ═══ HOME ═══ */
-function Home({onNav}){
+function Home({onNav,devices}){
   return(
     <div className="au" style={{paddingTop:32}}>
       <div style={{textAlign:"center",marginBottom:36,padding:"16px 0"}}>
@@ -372,7 +372,7 @@ function Home({onNav}){
       </div>
       {/* STATS */}
       <div className="stat-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:36}}>
-        {[{n:"222",l:"Telefon",c:"var(--acc)",k:"phone"},{n:"182",l:"Tablet",c:"#3A5BC7",k:"tablet"},{n:"72",l:"Notebook",c:"#D4548A",k:"notebook"},{n:"330+",l:"Aksesuar",c:"var(--tcD)",k:"aksesuar"},{n:"88",l:"Tarife",c:"#2E8B57",k:"tariff"},{n:"🏠",l:"Ev İnterneti",c:"#E85D04",k:"internet"}].map((s,i)=>(
+        {[{n:String(devices.phone.length),l:"Telefon",c:"var(--acc)",k:"phone"},{n:String(devices.tablet.length),l:"Tablet",c:"#3A5BC7",k:"tablet"},{n:String(devices.notebook.length),l:"Notebook",c:"#D4548A",k:"notebook"},{n:String(devices.aksesuar.length),l:"Aksesuar",c:"var(--tcD)",k:"aksesuar"},{n:"88",l:"Tarife",c:"#2E8B57",k:"tariff"},{n:"🏠",l:"Ev İnterneti",c:"#E85D04",k:"internet"}].map((s,i)=>(
           <div key={i} className="ac" onClick={()=>onNav(s.k)} style={{background:"#fff",borderRadius:12,padding:16,textAlign:"center",border:"1px solid var(--brd)",animationDelay:`${i*.07}s`,animationFillMode:"both",cursor:"pointer",transition:"all .2s",boxShadow:"var(--sh)"}}
             onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 18px rgba(37,59,128,.1)"}}
             onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="var(--sh)"}}>
