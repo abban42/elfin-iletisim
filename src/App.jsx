@@ -94,8 +94,10 @@ export default function App(){
   const ADMIN_PASS="elfin2026";
   const backRef=useRef(null);
   const[dynDevices,setDynDevices]=useState(null);
+  const[chatbotExtra,setChatbotExtra]=useState("");
+  const[dynPromos,setDynPromos]=useState(null);
 
-  // Try loading fresh data from devices.json
+  // Try loading fresh data from devices.json, promos.json, chatbot_kb_extra.json
   useEffect(()=>{
     fetch("/devices.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&d.telefon){
@@ -104,6 +106,14 @@ export default function App(){
         console.log("[Elfin] devices.json yüklendi:",d.telefon?.length,"tel,",d.tablet?.length,"tab,",d.notebook?.length,"nb,",d.aksesuar?.length,"aks");
       }
     }).catch(()=>console.log("[Elfin] devices.json yok, gömülü veri kullanılıyor"));
+
+    fetch("/promos.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&Array.isArray(d.promos)&&d.promos.length>0){setDynPromos(d.promos);console.log("[Elfin] promos.json yüklendi:",d.promos.length,"reklam")}
+    }).catch(()=>{});
+
+    fetch("/chatbot_kb_extra.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&d.content){setChatbotExtra(d.content);console.log("[Elfin] chatbot_kb_extra.json yüklendi")}
+    }).catch(()=>{});
   },[]);
 
   const devices=dynDevices||allDevices;
@@ -169,7 +179,7 @@ export default function App(){
       <ChatBot />
 
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onLogin={u=>{setUser(u);setShowAuth(false)}} />}
-      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} onClose={()=>setShowAdmin(false)} />}
+      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} onClose={()=>setShowAdmin(false)} />}
 
       <main style={{maxWidth:1440,margin:"0 auto",padding:"0 20px"}}>
         {page==="home"&&<Home onNav={navigate} devices={devices}/>}
@@ -184,7 +194,7 @@ export default function App(){
 
       {/* PROMO CAROUSEL */}
       <div style={{maxWidth:960,margin:"0 auto",padding:"30px 20px 0"}}>
-        <PromoCarousel onNav={navigate}/>
+        <PromoCarousel onNav={navigate} dynPromos={dynPromos}/>
       </div>
 
       <footer style={{marginTop:30,background:"var(--acc)",padding:"0",textAlign:"center"}}>
@@ -314,15 +324,16 @@ function CountdownBanner() {
 }
 
 /* ═══ PROMO CAROUSEL ═══ */
-function PromoCarousel({onNav}){
+function PromoCarousel({onNav,dynPromos}){
   const[idx,setIdx]=useState(0);
-  const promos=[
+  const defaultPromos=[
     {title:"📱 Ayın Cihazı",sub:"Samsung Galaxy S26 Ultra",desc:"12 GB RAM • 256 GB • 109.999 TL'den başlayan fiyatlarla!",color:"#1428A0",action:"phone"},
     {title:"📡 En İyi Tarife",sub:"GNÇ Avantaj+ 40 GB",desc:"20+20 GB Sosyal Medya • 1000 DK • 650 TL/ay",color:"#E8A800",action:"tariff"},
     {title:"🏠 Ev İnterneti Fırsatı",sub:"Fiber 15 Ay — 591 TL'den",desc:"100 Mbps'den 1000 Mbps'e kadar • Taahhütlü avantajlı fiyatlar",color:"#00B4D8",action:"internet"},
     {title:"🎁 200 TL Alışveriş Çeki",sub:"Her Faturalı Hat Geçişinde",desc:"Numara taşıma veya yeni hat al, 200 TL çek kazan + iPhone 15 çekilişi!",color:"#25D366",action:"tariff"},
     {title:"⚡ 1 Nisan'da 5G!",sub:"5G Uyumlu Cihazlar Hazır",desc:"Galaxy S25-S26 • iPhone 15-17 • Vivo Y29S • Samsung A17 5G",color:"#0d7c3d",action:"phone"},
   ];
+  const promos=(dynPromos&&dynPromos.length>0)?dynPromos:defaultPromos;
   useEffect(()=>{const t=setInterval(()=>setIdx(i=>(i+1)%promos.length),4000);return()=>clearInterval(t)},[]);
   const p=promos[idx];
   return(
@@ -710,12 +721,30 @@ function AuthModal({onClose,onLogin}){
 }
 
 /* ═══ ADMIN PANEL ═══ */
-function AdminPanel({tariffs,setTariffs,onClose}){
+function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotExtra,setChatbotExtra,onClose}){
   const[tab,setTab]=useState("info");
   const phoneRef=useRef(null);
   const[uploadMsg,setUploadMsg]=useState("");
   const[uploading,setUploading]=useState(false);
   const[preview,setPreview]=useState(null);
+  // Chatbot state
+  const[kbText,setKbText]=useState(chatbotExtra||"");
+  const[kbMsg,setKbMsg]=useState("");
+  const[kbSaving,setKbSaving]=useState(false);
+  // Promo state
+  const defaultPromos=[
+    {title:"📱 Ayın Cihazı",sub:"Samsung Galaxy S26 Ultra",desc:"12 GB RAM • 256 GB • 109.999 TL'den başlayan fiyatlarla!",color:"#1428A0",action:"phone"},
+    {title:"📡 En İyi Tarife",sub:"GNÇ Avantaj+ 40 GB",desc:"20+20 GB Sosyal Medya • 1000 DK • 650 TL/ay",color:"#E8A800",action:"tariff"},
+    {title:"🏠 Ev İnterneti Fırsatı",sub:"Fiber 15 Ay — 591 TL'den",desc:"100 Mbps'den 1000 Mbps'e kadar • Taahhütlü avantajlı fiyatlar",color:"#00B4D8",action:"internet"},
+    {title:"🎁 200 TL Alışveriş Çeki",sub:"Her Faturalı Hat Geçişinde",desc:"Numara taşıma veya yeni hat al, 200 TL çek kazan + iPhone 15 çekilişi!",color:"#25D366",action:"tariff"},
+  ];
+  const[promos,setPromos]=useState(dynPromos||defaultPromos);
+  const[promoMsg,setPromoMsg]=useState("");
+  const[promoSaving,setPromoSaving]=useState(false);
+  const[editIdx,setEditIdx]=useState(null);
+  const[editForm,setEditForm]=useState({title:"",sub:"",desc:"",color:"#253B80",action:"phone"});
+  const colorOpts=["#253B80","#1428A0","#3A5BC7","#E8A800","#00B4D8","#25D366","#0d7c3d","#D4548A","#E17055","#7B61FF","#636e72","#FF6B6B","#1a1a2e"];
+  const actionOpts=[{v:"phone",l:"Telefon"},{v:"tablet",l:"Tablet"},{v:"notebook",l:"Notebook"},{v:"aksesuar",l:"Aksesuar"},{v:"tariff",l:"Tarife"},{v:"internet",l:"Ev İnterneti"},{v:"contact",l:"İletişim"}];
 
   // Load SheetJS dynamically
   const loadXLSX=()=>new Promise((resolve)=>{
@@ -726,21 +755,7 @@ function AdminPanel({tariffs,setTariffs,onClose}){
     document.head.appendChild(s);
   });
 
-  /* ── Excel İşleme (6 Kural Otomatik) ──
-     Ham Turkcell Excel sütun sırası (0-14):
-     0:Kategori 1:Segment 2:Marka 3:Model 4:URUN_ADI
-     5:ODEME_TIPI 6:SIGORTA_SECENEGI 7:vade 8:ncampaigncode
-     9:aylik_taksit_bedeli 10:olm 11:bayi_primi
-     12:toplam_vade_farki 13:toplam_kontratli_tutar 14:tskf
-     
-     Kurallar:
-     1. İlk 4 satır + son "TURKCELL GİZLİDİR" satırı silinir
-     2. Gereksiz sütunlar yok sayılır (Segment,Model,ODEME_TIPI,SIGORTA_SECENEGI,ncampaigncode,olm,bayi_primi,tskf)
-     3. Metin→Sayı dönüşümü (Türkçe format)
-     4. aylik=0 VE vade_farki=0 → Peşin satırı
-     5. Para birimi formatı (gösterim için)
-     6. Akıllı Telefon'da peşin < 5.000 ₺ → satır silinir
-  */
+  /* ── Excel İşleme (6 Kural) ── */
   const processExcel=async(file)=>{
     setUploadMsg("Excel okunuyor...");setPreview(null);
     const XLSX=await loadXLSX();
@@ -748,29 +763,20 @@ function AdminPanel({tariffs,setTariffs,onClose}){
     const wb=XLSX.read(data);
     const ws=wb.Sheets[wb.SheetNames[0]];
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
-
-    // Kural 1: İlk 4 satır atla (startRow=5, header satır 4'te)
     const startRow=5;
     const cleanNum=(v)=>{if(!v||v==="")return 0;const s=String(v).replace(/₺/g,"").replace(/\./g,"").replace(/,/g,".").trim();return parseFloat(s)||0};
-
     const models={};let curCat="";
     const offsets={telefon:0,tablet:1000,notebook:2000,aksesuar:3000,vinn:4000};
     const counters={telefon:0,tablet:0,notebook:0,aksesuar:0,vinn:0};
     let skippedCheap=0;
-
     for(let i=startRow;i<rows.length;i++){
       const r=rows[i];if(!r||r.length<5)continue;
       const rawCat=String(r[0]||"").trim();
-
-      // Kural 1: Son "TURKCELL GİZLİDİR" satırını atla
       if(/GİZLİ/i.test(rawCat)||/TURKCELL G/i.test(rawCat))continue;
-
-      // Kural 2: Sadece gerekli sütunları oku (gereksizler yok sayılır)
-      const marka=String(r[2]||"").trim();   // C: Marka
-      const urunAdi=String(r[4]||"").trim(); // E: URUN_ADI
+      const marka=String(r[2]||"").trim();
+      const urunAdi=String(r[4]||"").trim();
       if(!marka||!urunAdi)continue;
       if(rawCat)curCat=rawCat;
-
       let catKey="";
       if(/telefon/i.test(curCat))catKey="telefon";
       else if(/aksesuar/i.test(curCat))catKey="aksesuar";
@@ -778,22 +784,10 @@ function AdminPanel({tariffs,setTariffs,onClose}){
       else if(/notebook/i.test(curCat))catKey="notebook";
       else if(/vinn/i.test(curCat))catKey="vinn";
       else continue;
-
-      // Kural 3: Metin→Sayı dönüşümü
-      const vade=cleanNum(r[7]);              // H: vade
-      const aylik=cleanNum(r[9]);             // J: aylik_taksit_bedeli
-      const vadeFarki=cleanNum(r[12]);        // M: toplam_vade_farki
-      const toplamKontrat=cleanNum(r[13]);    // N: toplam_kontratli_tutar
-      const tskf=cleanNum(r[14]);             // O: tskf (peşin fiyat)
-
-      // Kural 4: Peşin tespiti (aylik=0 VE vade_farki=0)
+      const vade=cleanNum(r[7]);const aylik=cleanNum(r[9]);const vadeFarki=cleanNum(r[12]);const toplamKontrat=cleanNum(r[13]);const tskf=cleanNum(r[14]);
       const isPesin=(aylik===0&&vadeFarki===0);
-
-      // Kural 6: Akıllı Telefon'da peşin < 5.000 ₺ → atla
       if(isPesin&&catKey==="telefon"&&toplamKontrat<5000&&toplamKontrat>0){skippedCheap++;continue}
-
       const key=`${catKey}|${marka}|${urunAdi}`;
-
       if(!models[key]){
         const id=offsets[catKey]+counters[catKey]++;
         models[key]={id,m:marka,n:urunAdi,p:Math.round(tskf),pi:null,t3:0,t3t:0,t6:0,t6t:0,t9:0,t9t:0,t12:0,t12t:0,t24:0,t24t:0,t36:0,t36t:0,_cat:catKey};
@@ -806,76 +800,194 @@ function AdminPanel({tariffs,setTariffs,onClose}){
         if(cur===0||aylik<cur){m[`t${v}`]=Math.round(aylik*100)/100;m[`t${v}t`]=Math.round(toplamKontrat)}
       }
     }
-
-    // Group by category
     const result={telefon:[],tablet:[],notebook:[],aksesuar:[],vinn:[]};
     Object.values(models).forEach(m=>{const c=m._cat;delete m._cat;result[c].push(m)});
-
     const stats={telefon:result.telefon.length,tablet:result.tablet.length,notebook:result.notebook.length,aksesuar:result.aksesuar.length,vinn:result.vinn.length};
     setPreview({result,stats,skippedCheap});
-    setUploadMsg(`✅ Hazır! ${stats.telefon} telefon, ${stats.tablet} tablet, ${stats.notebook} notebook, ${stats.aksesuar} aksesuar, ${stats.vinn} VINN.${skippedCheap>0?" ("+skippedCheap+" ucuz telefon filtrelendi)":""} Yüklemek için "GitHub'a Gönder" butonuna basın.`);
+    setUploadMsg(`✅ Hazır! ${stats.telefon} tel, ${stats.tablet} tab, ${stats.notebook} nb, ${stats.aksesuar} aks, ${stats.vinn} VINN.${skippedCheap>0?" ("+skippedCheap+" ucuz filtrelendi)":""}`);
   };
 
-  // Upload to GitHub via API
   const uploadToGitHub=async()=>{
     if(!preview)return;
     setUploading(true);setUploadMsg("GitHub'a yükleniyor...");
     try{
       const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",devices:preview.result})});
       const data=await res.json();
-      if(data.success){setUploadMsg("✅ "+data.message+" — Site 30 saniye içinde güncellenecek!");setPreview(null)}
-      else{setUploadMsg("❌ Hata: "+data.error)}
-    }catch(e){setUploadMsg("❌ Bağlantı hatası: "+e.message)}
+      if(data.success){setUploadMsg("✅ "+data.message);setPreview(null)}
+      else{setUploadMsg("❌ "+data.error)}
+    }catch(e){setUploadMsg("❌ Bağlantı: "+e.message)}
     setUploading(false);
   };
 
+  /* ── Chatbot KB Kaydet ── */
+  const saveKB=async()=>{
+    setKbSaving(true);setKbMsg("Kaydediliyor...");
+    try{
+      const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",file:"public/chatbot_kb_extra.json",data:{content:kbText,_updated:new Date().toISOString()},message:"Chatbot KB guncelleme - "+new Date().toLocaleDateString("tr-TR")})});
+      const d=await res.json();
+      if(d.success){setKbMsg("✅ Chatbot kuralları kaydedildi! ~30sn içinde aktif olacak.");setChatbotExtra(kbText)}
+      else{setKbMsg("❌ "+d.error)}
+    }catch(e){setKbMsg("❌ "+e.message)}
+    setKbSaving(false);
+  };
+
+  /* ── Promo Kaydet ── */
+  const savePromos=async()=>{
+    setPromoSaving(true);setPromoMsg("Kaydediliyor...");
+    try{
+      const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",file:"public/promos.json",data:{promos,_updated:new Date().toISOString()},message:"Reklam guncelleme - "+promos.length+" adet - "+new Date().toLocaleDateString("tr-TR")})});
+      const d=await res.json();
+      if(d.success){setPromoMsg("✅ Reklamlar kaydedildi! ~30sn içinde aktif olacak.");setDynPromos(promos)}
+      else{setPromoMsg("❌ "+d.error)}
+    }catch(e){setPromoMsg("❌ "+e.message)}
+    setPromoSaving(false);
+  };
+
+  const startEdit=(i)=>{setEditIdx(i);setEditForm(i===null?{title:"",sub:"",desc:"",color:"#253B80",action:"phone"}:{...promos[i]})};
+  const saveEdit=()=>{
+    if(!editForm.title||!editForm.sub)return;
+    const np=[...promos];
+    if(editIdx===null)np.push({...editForm});else np[editIdx]={...editForm};
+    setPromos(np);setEditIdx(null);setEditForm({title:"",sub:"",desc:"",color:"#253B80",action:"phone"});
+  };
+  const deletePromo=(i)=>{if(window.confirm("Bu reklamı silmek istediğinize emin misiniz?"))setPromos(promos.filter((_,j)=>j!==i))};
+  const movePromo=(i,dir)=>{const np=[...promos];const t=np[i];np[i]=np[i+dir];np[i+dir]=t;setPromos(np)};
+
+  const msgBox=(msg)=>msg?<div style={{background:msg.includes("❌")?"rgba(220,53,69,.08)":msg.includes("✅")?"rgba(13,124,61,.08)":"rgba(37,59,128,.06)",border:"1px solid "+(msg.includes("❌")?"rgba(220,53,69,.2)":msg.includes("✅")?"rgba(13,124,61,.2)":"rgba(37,59,128,.15)"),borderRadius:8,padding:10,fontSize:11,color:msg.includes("❌")?"#dc3545":msg.includes("✅")?"#0d7c3d":"var(--acc)",marginTop:10,lineHeight:1.5}}>{msg}</div>:null;
+  const tabBtn=(k,l)=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?"var(--acc)":"var(--bg2)",color:tab===k?"#fff":"var(--txt2)",border:"1px solid "+(tab===k?"var(--acc)":"var(--brd)"),borderRadius:8,padding:"7px 12px",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
+
   return(<div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(0,0,0,.3)",backdropFilter:"blur(10px)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={onClose}>
-    <div onClick={e=>e.stopPropagation()} className="au" style={{background:"#fff",borderRadius:16,padding:28,width:600,maxWidth:"100%",maxHeight:"85vh",overflowY:"auto",border:"1px solid var(--brd)",boxShadow:"0 8px 40px rgba(0,0,0,.12)"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+    <div onClick={e=>e.stopPropagation()} className="au" style={{background:"#fff",borderRadius:16,padding:24,width:640,maxWidth:"100%",maxHeight:"90vh",overflowY:"auto",border:"1px solid var(--brd)",boxShadow:"0 8px 40px rgba(0,0,0,.12)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <h2 style={{fontSize:18,fontWeight:800,color:"var(--acc)"}}>⚙️ Yönetim Paneli</h2>
         <button onClick={onClose} style={{background:"var(--bg2)",border:"1px solid var(--brd)",color:"var(--txt3)",width:32,height:32,borderRadius:8,fontSize:14,cursor:"pointer"}}>✕</button>
       </div>
-      <div style={{display:"flex",gap:6,marginBottom:18}}>
-        {[{k:"info",l:"ℹ️ Bilgi"},{k:"phones",l:"📱 Cihaz Yükle"}].map(t=>(<button key={t.k} onClick={()=>setTab(t.k)} style={{background:tab===t.k?"var(--acc)":"var(--bg2)",color:tab===t.k?"#fff":"var(--txt2)",border:"1px solid "+(tab===t.k?"var(--acc)":"var(--brd)"),borderRadius:8,padding:"7px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>))}
+      <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
+        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}
       </div>
 
+      {/* ── BİLGİ ── */}
       {tab==="info"&&(<div>
         <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
-          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:8}}>Mevcut Veriler</h3>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            {[{l:"Telefon",n:ALL_PHONES.length},{l:"Tablet",n:ALL_TABLET.length},{l:"Notebook",n:ALL_NOTEBOOK.length},{l:"Aksesuar",n:ALL_AKSESUAR.length},{l:"VINN",n:ALL_VINN.length},{l:"Tarife Kategorisi",n:tariffs.length}].map((s,i)=>(
-              <div key={i} style={{background:"#fff",borderRadius:8,padding:"8px 12px",border:"1px solid var(--brd)"}}><span style={{fontSize:11,color:"var(--txt2)"}}>{s.l}: </span><span style={{fontSize:13,fontWeight:800,color:"var(--acc)"}}>{s.n}</span></div>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:8}}>Site Verileri (Güncel)</h3>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+            {[{l:"Telefon",n:devices.phone.length,c:"var(--acc)"},{l:"Tablet",n:devices.tablet.length,c:"#3A5BC7"},{l:"Notebook",n:devices.notebook.length,c:"#D4548A"},{l:"Aksesuar",n:devices.aksesuar.length,c:"var(--tcD)"},{l:"Tarife Kat.",n:tariffs.length,c:"#2E8B57"},{l:"Reklam",n:promos.length,c:"#E8A800"}].map((s,i)=>(
+              <div key={i} style={{background:"#fff",borderRadius:8,padding:"8px 10px",border:"1px solid var(--brd)",textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:s.c}}>{s.n}</div><div style={{fontSize:9,color:"var(--txt3)"}}>{s.l}</div></div>
             ))}
           </div>
         </div>
-        <div style={{fontSize:11,color:"var(--txt2)",lineHeight:1.6}}>
-          <p><strong>Nasıl çalışır:</strong></p>
-          <p>1. "Cihaz Yükle" sekmesine geç</p>
-          <p>2. Turkcell'den gelen Excel dosyasını seç</p>
-          <p>3. Sistem dosyayı işler, özet gösterir</p>
-          <p>4. "GitHub'a Gönder" butonuna bas</p>
-          <p>5. Site 30 saniye içinde otomatik güncellenir!</p>
+        <div style={{fontSize:11,color:"var(--txt2)",lineHeight:1.8}}>
+          <p style={{fontWeight:700,marginBottom:4}}>Sekmeler:</p>
+          <p>📱 <strong>Cihaz:</strong> Turkcell Excel → otomatik işle → yükle</p>
+          <p>🤖 <strong>Chatbot:</strong> AI asistana yeni kurallar/bilgiler ekle</p>
+          <p>📢 <strong>Reklamlar:</strong> Ana sayfa carousel düzenle</p>
+          <p style={{marginTop:8,fontSize:10,color:"var(--txt3)"}}>Her değişiklik ~30sn içinde siteye yansır.</p>
         </div>
       </div>)}
 
+      {/* ── CİHAZ YÜKLE ── */}
       {tab==="phones"&&(<div>
         <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
           <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:6}}>Cihaz Verisi Yükle (Excel)</h3>
-          <p style={{fontSize:10,color:"var(--txt3)",marginBottom:10,lineHeight:1.4}}>Turkcell Bireysel Cihaz Ücretleri Raporu (.xlsx) dosyasını seçin</p>
+          <p style={{fontSize:10,color:"var(--txt3)",marginBottom:10}}>Turkcell Bireysel Cihaz Ücretleri Raporu (.xlsx)</p>
           <input ref={phoneRef} type="file" accept=".xlsx,.xls" onChange={e=>{if(e.target.files[0])processExcel(e.target.files[0])}} style={{display:"none"}}/>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <button onClick={()=>phoneRef.current?.click()} disabled={uploading} style={{background:"var(--acc)",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:uploading?.5:1}}>📁 Excel Dosyası Seç</button>
+            <button onClick={()=>phoneRef.current?.click()} disabled={uploading} style={{background:"var(--acc)",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:uploading?.5:1}}>📁 Excel Seç</button>
             {preview&&<button onClick={uploadToGitHub} disabled={uploading} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:uploading?.5:1}}>{uploading?"⏳ Yükleniyor...":"🚀 GitHub'a Gönder"}</button>}
           </div>
         </div>
-        {uploadMsg&&<div style={{background:uploadMsg.includes("❌")?"rgba(220,53,69,.08)":uploadMsg.includes("✅")?"rgba(13,124,61,.08)":"rgba(37,59,128,.06)",border:"1px solid "+(uploadMsg.includes("❌")?"rgba(220,53,69,.2)":uploadMsg.includes("✅")?"rgba(13,124,61,.2)":"rgba(37,59,128,.15)"),borderRadius:8,padding:10,fontSize:11,color:uploadMsg.includes("❌")?"#dc3545":uploadMsg.includes("✅")?"#0d7c3d":"var(--acc)",marginBottom:10,lineHeight:1.5}}>{uploadMsg}</div>}
-        {preview&&<div style={{background:"var(--bg2)",borderRadius:8,padding:12,marginBottom:10}}>
+        {msgBox(uploadMsg)}
+        {preview&&<div style={{background:"var(--bg2)",borderRadius:8,padding:12,marginTop:10}}>
           <div style={{fontSize:12,fontWeight:700,color:"var(--acc)",marginBottom:6}}>Önizleme</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
             {Object.entries(preview.stats).map(([k,v])=>(<div key={k} style={{background:"#fff",borderRadius:6,padding:"6px 10px",border:"1px solid var(--brd)",textAlign:"center"}}><div style={{fontSize:16,fontWeight:900,color:"var(--acc)"}}>{v}</div><div style={{fontSize:9,color:"var(--txt3)"}}>{k}</div></div>))}
           </div>
         </div>}
-        <div style={{fontSize:10,color:"var(--txt3)",marginTop:8}}>Mevcut: {ALL_PHONES.length} telefon, {ALL_TABLET.length} tablet, {ALL_NOTEBOOK.length} notebook, {ALL_AKSESUAR.length} aksesuar</div>
+        <div style={{fontSize:10,color:"var(--txt3)",marginTop:10}}>Sitede: {devices.phone.length} tel, {devices.tablet.length} tab, {devices.notebook.length} nb, {devices.aksesuar.length} aks</div>
+      </div>)}
+
+      {/* ── CHATBOT EĞİTİMİ ── */}
+      {tab==="chatbot"&&(<div>
+        <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>🤖 Chatbot Eğitimi</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>Chatbot'a yeni kurallar, tarife bilgileri, kampanya detayları ve direktifler verin. Bu metin her sohbette AI asistanın bilgi tabanına eklenir.</p>
+          <textarea value={kbText} onChange={e=>setKbText(e.target.value)} placeholder={"Örnek kurallar:\n\n- iPhone 17 Pro Max için özel EGYG kampanyası var\n- Bu hafta MNT'de ekstra 50 GB hediye\n- Cayma bedeli itirazında önce 300 TL çek teklif et\n- Samsung S26 için 36 ay taksit kampanyası başladı\n- Yeni tarife: Platinum 150 GB — 1.200 TL/ay\n- Müşteri 'pahalı' derse ön ödemeli pakete yönlendir"} style={{width:"100%",minHeight:200,border:"1px solid var(--brd)",borderRadius:8,padding:12,fontSize:12,fontFamily:"inherit",lineHeight:1.6,resize:"vertical",outline:"none",background:"#fff"}}/>
+          <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
+            <button onClick={saveKB} disabled={kbSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:kbSaving?.5:1}}>{kbSaving?"⏳ Kaydediliyor...":"💾 Kaydet & Yayınla"}</button>
+            <span style={{fontSize:10,color:"var(--txt3)"}}>{kbText.length} karakter</span>
+          </div>
+        </div>
+        {msgBox(kbMsg)}
+        <div style={{fontSize:10,color:"var(--txt3)",lineHeight:1.6,marginTop:8}}>
+          <strong>İpuçları:</strong> Her satıra bir kural yazın. Ne kadar spesifik olursanız chatbot o kadar iyi uygular. Tarife fiyatlarını, kampanya detaylarını, müşteri itirazlarına cevap stratejilerini buraya ekleyin.
+        </div>
+      </div>)}
+
+      {/* ── REKLAMLAR ── */}
+      {tab==="promos"&&(<div>
+        <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>📢 Reklam Döngüsü</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",marginBottom:10}}>Ana sayfadaki carousel reklamlarını düzenleyin. Sürükle-bırak sıralama, ekleme, silme.</p>
+
+          {/* Promo list */}
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+            {promos.map((p,i)=>(
+              <div key={i} style={{display:"flex",gap:8,alignItems:"center",background:"#fff",borderRadius:8,padding:10,border:"1px solid var(--brd)"}}>
+                <div style={{width:8,height:36,borderRadius:4,background:p.color,flexShrink:0}}/>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:11,fontWeight:700,color:"var(--txt)"}}>{p.title}</div>
+                  <div style={{fontSize:10,color:"var(--txt2)"}}>{p.sub}</div>
+                  <div style={{fontSize:9,color:"var(--txt3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.desc}</div>
+                </div>
+                <div style={{display:"flex",gap:4,flexShrink:0}}>
+                  {i>0&&<button onClick={()=>movePromo(i,-1)} style={{background:"var(--bg2)",border:"1px solid var(--brd)",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer"}}>↑</button>}
+                  {i<promos.length-1&&<button onClick={()=>movePromo(i,1)} style={{background:"var(--bg2)",border:"1px solid var(--brd)",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer"}}>↓</button>}
+                  <button onClick={()=>startEdit(i)} style={{background:"var(--acc)",border:"none",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer",color:"#fff"}}>✏</button>
+                  <button onClick={()=>deletePromo(i)} style={{background:"#dc3545",border:"none",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer",color:"#fff"}}>🗑</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Edit/Add form */}
+          {editIdx!==undefined&&editIdx!==null||editIdx===null?null:null}
+          <div style={{background:"var(--bg2)",borderRadius:8,padding:12,marginBottom:10,border:"1px solid var(--brd)"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--acc)",marginBottom:8}}>{editIdx!==null?"✏️ Düzenle":"➕ Yeni Reklam"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div>
+                <label style={{fontSize:9,color:"var(--txt3)"}}>Başlık (emoji + kısa)</label>
+                <input value={editForm.title} onChange={e=>setEditForm({...editForm,title:e.target.value})} placeholder="📱 Ayın Cihazı" style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:9,color:"var(--txt3)"}}>Alt Başlık</label>
+                <input value={editForm.sub} onChange={e=>setEditForm({...editForm,sub:e.target.value})} placeholder="Samsung Galaxy S26" style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+              </div>
+            </div>
+            <div style={{marginTop:8}}>
+              <label style={{fontSize:9,color:"var(--txt3)"}}>Açıklama</label>
+              <input value={editForm.desc} onChange={e=>setEditForm({...editForm,desc:e.target.value})} placeholder="Detay açıklama..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+            </div>
+            <div style={{display:"flex",gap:8,marginTop:8,alignItems:"end"}}>
+              <div>
+                <label style={{fontSize:9,color:"var(--txt3)"}}>Renk</label>
+                <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+                  {colorOpts.map(c=>(<div key={c} onClick={()=>setEditForm({...editForm,color:c})} style={{width:18,height:18,borderRadius:4,background:c,cursor:"pointer",border:editForm.color===c?"2px solid #000":"2px solid transparent"}}/>))}
+                </div>
+              </div>
+              <div>
+                <label style={{fontSize:9,color:"var(--txt3)"}}>Tıklayınca</label>
+                <select value={editForm.action} onChange={e=>setEditForm({...editForm,action:e.target.value})} style={{border:"1px solid var(--brd)",borderRadius:6,padding:"5px 8px",fontSize:10,fontFamily:"inherit"}}>
+                  {actionOpts.map(a=>(<option key={a.v} value={a.v}>{a.l}</option>))}
+                </select>
+              </div>
+              <button onClick={saveEdit} style={{background:"var(--acc)",border:"none",borderRadius:6,padding:"7px 14px",color:"#fff",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{editIdx!==null?"✓ Güncelle":"+ Ekle"}</button>
+              {editIdx!==null&&<button onClick={()=>{setEditIdx(null);setEditForm({title:"",sub:"",desc:"",color:"#253B80",action:"phone"})}} style={{background:"var(--bg2)",border:"1px solid var(--brd)",borderRadius:6,padding:"7px 14px",color:"var(--txt3)",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>İptal</button>}
+            </div>
+          </div>
+
+          <button onClick={savePromos} disabled={promoSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:promoSaving?.5:1}}>{promoSaving?"⏳ Kaydediliyor...":"💾 Reklamları Kaydet & Yayınla"}</button>
+        </div>
+        {msgBox(promoMsg)}
       </div>)}
     </div>
   </div>);
@@ -889,12 +1001,18 @@ function ChatBotSystem({fullPage=false, onClose}){
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
   const[speaking,setSpeaking]=useState(false);
+  const[extraKB,setExtraKB]=useState("");
   const chatRef=useRef(null);
   const inputRef=useRef(null);
   const recognitionRef=useRef(null);
 
   useEffect(()=>{if(chatRef.current)chatRef.current.scrollTop=chatRef.current.scrollHeight},[messages,loading]);
   useEffect(()=>{if(inputRef.current)inputRef.current.focus()},[]);
+  useEffect(()=>{
+    fetch("/chatbot_kb_extra.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&d.content)setExtraKB(d.content);
+    }).catch(()=>{});
+  },[]);
 
   const systemPrompt=`${CHATBOT_KB}
 
@@ -914,7 +1032,7 @@ EK TALİMATLAR:
 - Telefon: 0532 682 22 77
 - Çalışma saatleri: Hafta içi ve Cumartesi 09:00-22:00, Pazar 11:00-22:00
 - Cevaplarını düz metin yaz, markdown formatı (**, ##, vb.) KULLANMA.
-- Konu dışı sorularda (politika, din, kişisel sorular vb.) "Ben sadece Elfin İletişim ürün ve hizmetleri konusunda yardımcı olabilirim 😊" de.`;
+- Konu dışı sorularda (politika, din, kişisel sorular vb.) "Ben sadece Elfin İletişim ürün ve hizmetleri konusunda yardımcı olabilirim 😊" de.`+(extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:"");
 
   /* ── SPEECH RECOGNITION ── */
   const startListening=()=>{
