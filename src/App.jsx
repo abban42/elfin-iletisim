@@ -765,7 +765,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     document.head.appendChild(s);
   });
 
-  /* ── PDF → Görsel → Claude Vision OCR ── */
+  /* ── PDF → Görsel → Claude Vision OCR (Sayfa Sayfa) ── */
   const processTarifePDF=async(file)=>{
     setTarifeProcessing(true);setTarifePreview(null);setTarifeMsg("PDF okunuyor...");
     try{
@@ -773,30 +773,47 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
       const data=await file.arrayBuffer();
       const pdf=await pdfjsLib.getDocument({data}).promise;
       const pageCount=pdf.numPages;
-      setTarifeMsg(`PDF: ${pageCount} sayfa bulundu. Görseller oluşturuluyor...`);
+      setTarifeMsg(`PDF: ${pageCount} sayfa bulundu. Sayfa sayfa işlenecek...`);
       
-      const images=[];
-      for(let i=1;i<=Math.min(pageCount,10);i++){
+      const allTariffs=[];
+      for(let i=1;i<=Math.min(pageCount,15);i++){
+        setTarifeMsg(`📄 Sayfa ${i}/${Math.min(pageCount,15)} — görsel oluşturuluyor...`);
         const page=await pdf.getPage(i);
-        const vp=page.getViewport({scale:2});
+        const vp=page.getViewport({scale:3});
         const canvas=document.createElement("canvas");
         canvas.width=vp.width;canvas.height=vp.height;
-        await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
-        const b64=canvas.toDataURL("image/png").split(",")[1];
-        images.push({data:b64,type:"image/png"});
-        setTarifeMsg(`Sayfa ${i}/${Math.min(pageCount,10)} işlendi...`);
+        const ctx=canvas.getContext("2d");
+        ctx.fillStyle="#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);
+        await page.render({canvasContext:ctx,viewport:vp}).promise;
+        const b64=canvas.toDataURL("image/jpeg",0.92).split(",")[1];
+        
+        setTarifeMsg(`🤖 Sayfa ${i}/${Math.min(pageCount,15)} — Claude Vision okuyor... (20-40sn)`);
+        try{
+          const res=await fetch("/api/tariff-ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",images:[{data:b64,type:"image/jpeg"}]})});
+          const result=await res.json();
+          if(result.success&&result.tariffs){
+            result.tariffs.forEach(kat=>{
+              const existing=allTariffs.findIndex(a=>a.ad===kat.ad);
+              if(existing>=0){
+                const merged=new Map();
+                [...allTariffs[existing].tarifeler,...(kat.tarifeler||[])].forEach(t=>merged.set(t.ad,t));
+                allTariffs[existing].tarifeler=[...merged.values()];
+              }else{allTariffs.push(kat)}
+            });
+            setTarifeMsg(`✅ Sayfa ${i} OK — şu ana kadar ${allTariffs.length} kategori`);
+          }else{
+            setTarifeMsg(`⚠️ Sayfa ${i} — tarife bulunamadı, devam ediliyor...`);
+          }
+        }catch(e){setTarifeMsg(`⚠️ Sayfa ${i} hata: ${e.message}, devam...`)}
+        if(i<Math.min(pageCount,15))await new Promise(r=>setTimeout(r,1000));
       }
       
-      setTarifeMsg("Claude Vision ile tarifeler çıkarılıyor... (30-60sn sürebilir)");
-      const res=await fetch("/api/tariff-ocr",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",images})});
-      const result=await res.json();
-      
-      if(result.success&&result.tariffs){
-        setTarifePreview(result.tariffs);
-        const total=result.tariffs.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
-        setTarifeMsg(`✅ ${result.tariffs.length} kategori, toplam ${total} tarife çıkarıldı! Kontrol edip "Kaydet" butonuna basın.`);
+      if(allTariffs.length>0){
+        setTarifePreview(allTariffs);
+        const total=allTariffs.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
+        setTarifeMsg(`✅ Tamamlandı! ${allTariffs.length} kategori, ${total} tarife. Kontrol edip "Kaydet" butonuna basın.`);
       }else{
-        setTarifeMsg("❌ Tarife çıkarılamadı: "+(result.error||"Bilinmeyen hata"));
+        setTarifeMsg("❌ Hiçbir sayfadan tarife çıkarılamadı.");
       }
     }catch(e){setTarifeMsg("❌ Hata: "+e.message)}
     setTarifeProcessing(false);
