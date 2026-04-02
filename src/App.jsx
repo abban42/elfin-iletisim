@@ -1020,38 +1020,64 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
           </div>
         </div>
         {msgBox(tarifeMsg)}
-        {/* Önizleme */}
+        {/* Düzenlenebilir Önizleme */}
         {tarifePreview&&<div style={{marginTop:12}}>
-          <div style={{fontSize:12,fontWeight:700,color:"var(--acc)",marginBottom:8}}>Önizleme — {tarifePreview.length} Kategori</div>
-          <div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:350,overflowY:"auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <div style={{fontSize:12,fontWeight:700,color:"var(--acc)"}}>Önizleme — {tarifePreview.length} Kategori <span style={{fontSize:10,fontWeight:400,color:"var(--txt3)"}}>(değerlere tıklayarak düzenleyebilirsiniz)</span></div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:400,overflowY:"auto"}}>
             {tarifePreview.map((kat,ki)=>(
               <div key={ki} style={{background:"#fff",borderRadius:8,padding:12,border:"1px solid var(--brd)"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
                     <span style={{fontSize:16}}>{kat.ikon||"📋"}</span>
                     <div>
-                      <div style={{fontSize:12,fontWeight:700,color:"var(--txt)"}}>{kat.ad}</div>
-                      <div style={{fontSize:9,color:"var(--txt3)"}}>{kat.aciklama} • {kat.sure} • {kat.tip}</div>
+                      <input value={kat.ad} onChange={e=>{const np=[...tarifePreview];np[ki]={...np[ki],ad:e.target.value};setTarifePreview(np)}} style={{fontSize:12,fontWeight:700,color:"var(--txt)",border:"1px solid transparent",borderRadius:4,padding:"1px 4px",background:"transparent",fontFamily:"inherit",width:200}} onFocus={e=>e.target.style.borderColor="var(--acc)"} onBlur={e=>e.target.style.borderColor="transparent"}/>
+                      <div style={{fontSize:9,color:"var(--txt3)",paddingLeft:4}}>{kat.aciklama} • {kat.sure} • {kat.tip}</div>
                     </div>
                   </div>
                   <button onClick={()=>deleteTarifeKat(ki)} style={{background:"#dc3545",border:"none",borderRadius:4,width:22,height:22,fontSize:9,cursor:"pointer",color:"#fff"}}>✕</button>
                 </div>
-                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:4}}>
-                  {(kat.tarifeler||[]).map((t,ti)=>(
-                    <div key={ti} style={{background:"var(--bg2)",borderRadius:6,padding:"6px 8px",border:"1px solid var(--brd)"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:"var(--txt)"}}>{t.ad}</div>
-                      <div style={{fontSize:9,color:"var(--txt3)"}}>{t.icerik}</div>
-                      <div style={{fontSize:11,fontWeight:800,color:"var(--acc)",marginTop:2}}>{t.fiyat} TL/ay</div>
-                    </div>
-                  ))}
-                </div>
+                <table style={{width:"100%",fontSize:10,borderCollapse:"collapse"}}>
+                  <thead>
+                    <tr style={{background:"var(--bg2)"}}>
+                      <th style={{textAlign:"left",padding:"4px 6px",color:"var(--txt3)",fontWeight:600}}>Tarife</th>
+                      <th style={{textAlign:"center",padding:"4px 4px",color:"var(--txt3)",fontWeight:600,width:45}}>GB</th>
+                      <th style={{textAlign:"center",padding:"4px 4px",color:"var(--txt3)",fontWeight:600,width:50}}>DK</th>
+                      <th style={{textAlign:"center",padding:"4px 4px",color:"var(--txt3)",fontWeight:600,width:45}}>SMS</th>
+                      <th style={{textAlign:"center",padding:"4px 4px",color:"var(--txt3)",fontWeight:600,width:55}}>TL/ay</th>
+                      <th style={{width:24}}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(kat.tarifeler||[]).map((t,ti)=>{
+                      const upd=(field,val)=>{const np=[...tarifePreview];const nk={...np[ki]};const nt=[...nk.tarifeler];nt[ti]={...nt[ti],[field]:val};nk.tarifeler=nt;np[ki]=nk;setTarifePreview(np)};
+                      const numUpd=(field,val)=>{const n=parseInt(val)||0;const np=[...tarifePreview];const nk={...np[ki]};const nt=[...nk.tarifeler];const cur={...nt[ti],[field]:n};cur.icerik=`${cur.gb} GB + ${cur.dk} DK + ${cur.sms} SMS`;nt[ti]=cur;nk.tarifeler=nt;np[ki]=nk;setTarifePreview(np)};
+                      const cellStyle={textAlign:"center",padding:"3px 2px",borderBottom:"1px solid var(--brd)"};
+                      const inputStyle={width:"100%",border:"1px solid transparent",borderRadius:3,padding:"2px 3px",fontSize:10,fontFamily:"inherit",textAlign:"center",background:"transparent"};
+                      const focusStyle=e=>e.target.style.borderColor="var(--acc)";
+                      const blurStyle=e=>e.target.style.borderColor="transparent";
+                      return(<tr key={ti}>
+                        <td style={{padding:"3px 6px",borderBottom:"1px solid var(--brd)"}}>
+                          <input value={t.ad} onChange={e=>upd("ad",e.target.value)} style={{...inputStyle,textAlign:"left",fontWeight:600}} onFocus={focusStyle} onBlur={blurStyle}/>
+                        </td>
+                        <td style={cellStyle}><input value={t.gb} onChange={e=>numUpd("gb",e.target.value)} style={{...inputStyle,color:"var(--acc)",fontWeight:700}} onFocus={focusStyle} onBlur={blurStyle}/></td>
+                        <td style={cellStyle}><input value={t.dk} onChange={e=>numUpd("dk",e.target.value)} style={inputStyle} onFocus={focusStyle} onBlur={blurStyle}/></td>
+                        <td style={cellStyle}><input value={t.sms} onChange={e=>numUpd("sms",e.target.value)} style={inputStyle} onFocus={focusStyle} onBlur={blurStyle}/></td>
+                        <td style={cellStyle}><input value={t.fiyat} onChange={e=>numUpd("fiyat",e.target.value)} style={{...inputStyle,color:"#0d7c3d",fontWeight:800}} onFocus={focusStyle} onBlur={blurStyle}/></td>
+                        <td style={{...cellStyle,textAlign:"center"}}><button onClick={()=>{const np=[...tarifePreview];const nk={...np[ki]};nk.tarifeler=nk.tarifeler.filter((_,j)=>j!==ti);np[ki]=nk;setTarifePreview(np)}} style={{background:"none",border:"none",color:"#dc3545",cursor:"pointer",fontSize:10,padding:0}}>✕</button></td>
+                      </tr>);
+                    })}
+                  </tbody>
+                </table>
+                <button onClick={()=>{const np=[...tarifePreview];const nk={...np[ki]};nk.tarifeler=[...(nk.tarifeler||[]),{ad:"Yeni Tarife",icerik:"0 GB + 0 DK + 0 SMS",gb:0,dk:0,sms:0,fiyat:0}];np[ki]=nk;setTarifePreview(np)}} style={{background:"none",border:"1px dashed var(--brd)",borderRadius:4,padding:"3px 8px",fontSize:9,color:"var(--txt3)",cursor:"pointer",marginTop:4,fontFamily:"inherit"}}>+ Tarife Ekle</button>
               </div>
             ))}
           </div>
         </div>}
         <div style={{fontSize:10,color:"var(--txt3)",marginTop:10,lineHeight:1.6}}>
           <strong>Mevcut:</strong> {tariffs.length} tarife kategorisi sitede aktif.
-          <br/><strong>İpucu:</strong> PDF'i yükledikten sonra önizlemeyi kontrol edin. Yanlış çıkan kategoriyi ✕ ile silebilirsiniz. "Mevcut ile Birleştir" butonu yeni tarifeleri eskilerle birleştirir.
+          <br/><strong>İpucu:</strong> Değerlere tıklayarak düzenleyin. Yanlış GB, DK, fiyat değerlerini düzeltin. ✕ ile tarife veya kategori silin. Düzeltmeler bittikten sonra "Kaydet & Yayınla" butonuna basın.
         </div>
       </div>)}
 
