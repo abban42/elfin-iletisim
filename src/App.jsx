@@ -751,6 +751,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const actionOpts=[{v:"phone",l:"Telefon"},{v:"tablet",l:"Tablet"},{v:"notebook",l:"Notebook"},{v:"aksesuar",l:"Aksesuar"},{v:"tariff",l:"Tarife"},{v:"internet",l:"Ev İnterneti"},{v:"contact",l:"İletişim"}];
   // Tarife OCR state
   const pdfRef=useRef(null);
+  const xlsRef=useRef(null);
   const[tarifeMsg,setTarifeMsg]=useState("");
   const[tarifeProcessing,setTarifeProcessing]=useState(false);
   const[tarifeSaving,setTarifeSaving]=useState(false);
@@ -764,6 +765,97 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";resolve(window.pdfjsLib)};
     document.head.appendChild(s);
   });
+
+  /* ── Excel → Tarife İşleme ── */
+  const processTarifeExcel=async(file)=>{
+    setTarifeProcessing(true);setTarifePreview(null);setTarifeMsg("Excel okunuyor...");
+    try{
+      const XLSX=await loadXLSX();
+      const data=await file.arrayBuffer();
+      const wb=XLSX.read(data);
+      const allTariffs=[];
+      const ikonMap={"prestij":"⭐","rahat":"😌","avantaj":"🏪","genç":"🎓","gnç":"🎓","ilk turkcell":"👶","favorim":"👶","mutlu çocuk":"🧒","mutlu emekli":"🌿","emek":"🏛️","platinum":"👑","data":"📶","saat":"⌚","mega":"⭐","cepte":"🆕","başlangıç":"🚀","hemen":"⚡","ekstra":"💎","emektar":"🌿","wifi":"📡","turist":"✈️","3 aylık":"📦","mobil":"📡"};
+      const renkMap={"prestij":"#7B61FF","rahat":"#00B894","avantaj":"#E17055","genç":"#E8A800","gnç":"#E8A800","ilk turkcell":"#D4548A","favorim":"#D4548A","mutlu çocuk":"#FF8FAB","mutlu emekli":"#2E8B57","emek":"#3A7BD5","platinum":"#1a1a2e","data":"#00C3FF","saat":"#636e72","mega":"#7B61FF","cepte":"#00B894","başlangıç":"#E17055","hemen":"#FF6B6B","ekstra":"#D4548A","emektar":"#2E8B57","wifi":"#636e72","turist":"#00B4D8","3 aylık":"#00C3FF","mobil":"#636e72"};
+      const findMatch=(text,map)=>{const t=(text||"").toLowerCase();for(const[k,v]of Object.entries(map)){if(t.includes(k))return v}return null};
+
+      // Sütun tespiti: header satırında anahtar kelime ara
+      const findCol=(headers,keys)=>headers.findIndex(h=>{const hl=(h||"").toString().toLowerCase();return keys.some(k=>hl.includes(k))});
+
+      for(const sheetName of wb.SheetNames){
+        const ws=wb.Sheets[sheetName];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+        if(rows.length<2)continue;
+
+        // Header satırını bul (ilk 5 satırda "tarife" veya "paket" veya "gb" içeren)
+        let headerIdx=-1;
+        for(let hi=0;hi<Math.min(5,rows.length);hi++){
+          const rowStr=rows[hi].join(" ").toLowerCase();
+          if(rowStr.includes("tarife")||rowStr.includes("paket")||rowStr.includes("fiyat")||rowStr.includes("gb")){headerIdx=hi;break}
+        }
+        if(headerIdx<0)headerIdx=0;
+        const headers=rows[headerIdx];
+
+        // Sütun eşleştirme
+        const catCol=findCol(headers,["kategori","grup","seri","tip"]);
+        const nameCol=findCol(headers,["tarife","paket","ad","isim","plan"]);
+        const contentCol=findCol(headers,["içerik","icerik","detay","açıklama"]);
+        const gbCol=findCol(headers,["gb","internet","data"]);
+        const dkCol=findCol(headers,["dakika","dk","konuşma"]);
+        const smsCol=findCol(headers,["sms","mesaj"]);
+        const fiyatCol=findCol(headers,["fiyat","ücret","tutar","tl","bedel"]);
+        const sureCol=findCol(headers,["süre","taahhüt","sure","periyot"]);
+        const tipCol=findCol(headers,["faturalı","faturali","ödeme","odeme"]);
+
+        if(nameCol<0&&gbCol<0){
+          // Sütun bulunamadı — sheet adını kategori olarak kullan, ham oku
+          continue;
+        }
+
+        const cleanN=(v)=>{if(!v&&v!==0)return 0;const s=String(v).replace(/[^0-9.,]/g,"").replace(/\./g,"").replace(",",".");return parseInt(s)||0};
+        let currentCat=sheetName;
+        const catTariffs={};
+
+        for(let ri=headerIdx+1;ri<rows.length;ri++){
+          const r=rows[ri];
+          if(!r||r.every(c=>!c&&c!==0))continue;
+
+          // Kategori tespiti
+          if(catCol>=0&&r[catCol]){currentCat=String(r[catCol]).trim()}
+          // Eğer ilk sütun dolu ama diğerleri boşsa → kategori satırı
+          else if(r[0]&&!r[nameCol>=0?nameCol:1]&&!r[fiyatCol>=0?fiyatCol:3]){
+            currentCat=String(r[0]).trim();continue;
+          }
+
+          const name=nameCol>=0?String(r[nameCol]||"").trim():"";
+          const fiyat=fiyatCol>=0?cleanN(r[fiyatCol]):0;
+          if(!name||!fiyat)continue;
+
+          const gb=gbCol>=0?cleanN(r[gbCol]):0;
+          const dk=dkCol>=0?cleanN(r[dkCol]):0;
+          const sms=smsCol>=0?cleanN(r[smsCol]):0;
+          const icerik=contentCol>=0&&r[contentCol]?String(r[contentCol]).trim():`${gb} GB + ${dk} DK + ${sms} SMS`;
+          const sure=sureCol>=0&&r[sureCol]?String(r[sureCol]).trim():"1 Yıllık";
+          const tip=tipCol>=0&&r[tipCol]?(/ön|hazır|prepaid/i.test(String(r[tipCol]))?"onodemeli":"faturali"):"faturali";
+
+          if(!catTariffs[currentCat])catTariffs[currentCat]={ad:currentCat,sart:null,aciklama:"",sure,tip,ikon:findMatch(currentCat,ikonMap)||"📋",renk:findMatch(currentCat,renkMap)||"#253B80",tarifeler:[]};
+          catTariffs[currentCat].tarifeler.push({ad:name,icerik,gb,dk,sms,fiyat});
+          // sure ve tip'i her zaman güncelle (son gelen geçerli)
+          if(sureCol>=0&&r[sureCol])catTariffs[currentCat].sure=sure;
+          if(tipCol>=0&&r[tipCol])catTariffs[currentCat].tip=tip;
+        }
+        Object.values(catTariffs).forEach(k=>{if(k.tarifeler.length>0)allTariffs.push(k)});
+      }
+
+      if(allTariffs.length>0){
+        setTarifePreview(allTariffs);
+        const total=allTariffs.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
+        setTarifeMsg(`✅ Excel'den ${allTariffs.length} kategori, ${total} tarife çıkarıldı. Kontrol edip "Kaydet" butonuna basın.`);
+      }else{
+        setTarifeMsg("❌ Excel'den tarife çıkarılamadı. Sütun başlıklarını kontrol edin (Tarife/Paket, GB, DK, SMS, Fiyat).");
+      }
+    }catch(e){setTarifeMsg("❌ Excel hatası: "+e.message)}
+    setTarifeProcessing(false);
+  };
 
   /* ── PDF → Görsel → Claude Vision OCR (Sayfa Sayfa) ── */
   const processTarifePDF=async(file)=>{
@@ -1010,13 +1102,20 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
       {/* ── TARİFE YÜKLE ── */}
       {tab==="tarife"&&(<div>
         <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
-          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>📋 Tarife Yükle (PDF → AI OCR)</h3>
-          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>Turkcell tarife katalogu PDF'ini yükleyin. Claude Vision AI görselleri okuyup tarifeleri otomatik çıkaracak.</p>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>📋 Tarife Yükle</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>Excel veya PDF olarak tarife yükleyin. Excel doğrudan okunur, PDF ise AI ile taranır.</p>
+          <input ref={xlsRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>{if(e.target.files[0])processTarifeExcel(e.target.files[0])}} style={{display:"none"}}/>
           <input ref={pdfRef} type="file" accept=".pdf" onChange={e=>{if(e.target.files[0])processTarifePDF(e.target.files[0])}} style={{display:"none"}}/>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
+            <button onClick={()=>xlsRef.current?.click()} disabled={tarifeProcessing} style={{background:"#0d7c3d",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:tarifeProcessing?.5:1}}>{tarifeProcessing?"⏳ İşleniyor...":"📊 Excel Yükle"}</button>
+            <button onClick={()=>pdfRef.current?.click()} disabled={tarifeProcessing} style={{background:"var(--acc)",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:tarifeProcessing?.5:1}}>{tarifeProcessing?"⏳ İşleniyor...":"📄 PDF Yükle (AI OCR)"}</button>
+          </div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <button onClick={()=>pdfRef.current?.click()} disabled={tarifeProcessing} style={{background:"var(--acc)",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:tarifeProcessing?.5:1}}>{tarifeProcessing?"⏳ İşleniyor...":"📁 PDF Seç"}</button>
             {tarifePreview&&<button onClick={saveTariffs} disabled={tarifeSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:tarifeSaving?.5:1}}>{tarifeSaving?"⏳ Kaydediliyor...":"🚀 Kaydet & Yayınla"}</button>}
             {tarifePreview&&<button onClick={mergeTariffs} style={{background:"#7B61FF",border:"none",borderRadius:8,padding:"10px 14px",color:"#fff",fontWeight:700,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>🔀 Mevcut ile Birleştir</button>}
+          </div>
+          <div style={{marginTop:10,fontSize:9,color:"var(--txt3)",lineHeight:1.6,background:"#fff",borderRadius:6,padding:8,border:"1px solid var(--brd)"}}>
+            <strong>Excel format:</strong> Sütun başlıkları otomatik tanınır — Tarife/Paket, GB, DK, SMS, Fiyat. Kategori sütunu varsa gruplar, yoksa sheet adı kategori olur.
           </div>
         </div>
         {msgBox(tarifeMsg)}
