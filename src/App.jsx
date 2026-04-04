@@ -742,6 +742,8 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const[kbText,setKbText]=useState(chatbotExtra||"");
   const[kbMsg,setKbMsg]=useState("");
   const[kbSaving,setKbSaving]=useState(false);
+  const[kbProcessing,setKbProcessing]=useState(false);
+  const kbFileRef=useRef(null);
   // Promo state
   const defaultPromos=[
     {title:"📱 Ayın Cihazı",sub:"Samsung Galaxy S26 Ultra",desc:"12 GB RAM • 256 GB • 109.999 TL'den başlayan fiyatlarla!",color:"#1428A0",action:"phone"},
@@ -1031,6 +1033,90 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     setKbSaving(false);
   };
 
+  /* ── Dosyadan Chatbot Eğitimi ── */
+  const processKBFile=async(file)=>{
+    const ext=file.name.split('.').pop().toLowerCase();
+    setKbProcessing(true);
+    setKbMsg("📂 "+file.name+" okunuyor...");
+    try{
+      // GÖRSEL (JPG PNG GIF WebP) → Claude Vision API ile analiz
+      if(['jpg','jpeg','png','webp','gif'].includes(ext)){
+        const reader=new FileReader();
+        reader.onload=async(e)=>{
+          const base64=e.target.result.split(',')[1];
+          const mimeType=file.type||'image/jpeg';
+          try{
+            const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+              system:"Sen bir Turkcell bayi için çalışan asistansın. Görseldeki TÜM bilgileri çıkart: tarife adı, fiyat, GB, dakika, SMS, kampanya detayları, koşullar, notlar. Düz metin olarak yaz, madde madde listele. Markdown kullanma.",
+              messages:[{role:"user",content:[
+                {type:"image",source:{type:"base64",media_type:mimeType,data:base64}},
+                {type:"text",text:"Bu görseldir (tarife listesi veya kampanya belgesi olabilir). İçindeki TÜM bilgileri çıkar ve düz metin olarak listele."}
+              ]}]
+            })});
+            const d=await res.json();
+            const extracted=d.reply||"(içerik çıkarılamadı)";
+            const header=`\n\n--- ${file.name} dosyasından çıkarılan bilgiler (${new Date().toLocaleDateString('tr-TR')}) ---\n`;
+            setKbText(prev=>prev+header+extracted+"\n---\n");
+            setKbMsg("✅ Görsel analiz edildi, içerik eğitim metnine eklendi!");
+          }catch(err){setKbMsg("❌ Görsel analiz hatası: "+err.message)}
+          setKbProcessing(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // PDF → Claude Document API ile analiz
+      if(ext==='pdf'){
+        if(file.size>5*1024*1024){setKbMsg("❌ PDF max 5 MB olmalı.");setKbProcessing(false);return}
+        const reader=new FileReader();
+        reader.onload=async(e)=>{
+          const base64=e.target.result.split(',')[1];
+          try{
+            const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+              system:"Sen bir Turkcell bayi için çalışan asistansın. PDF belgesindeki TÜM bilgileri çıkart: tarife adı, fiyat, GB, dakika, SMS, kampanya detayları, koşullar, notlar. Düz metin olarak yaz, madde madde listele. Markdown kullanma.",
+              messages:[{role:"user",content:[
+                {type:"document",source:{type:"base64",media_type:"application/pdf",data:base64}},
+                {type:"text",text:"Bu PDF'teki TÜM tarife ve kampanya bilgilerini çıkar ve düz metin listele."}
+              ]}]
+            })});
+            const d=await res.json();
+            const extracted=d.reply||"(içerik çıkarılamadı)";
+            const header=`\n\n--- ${file.name} dosyasından çıkarılan bilgiler (${new Date().toLocaleDateString('tr-TR')}) ---\n`;
+            setKbText(prev=>prev+header+extracted+"\n---\n");
+            setKbMsg("✅ PDF analiz edildi, içerik eğitim metnine eklendi!");
+          }catch(err){setKbMsg("❌ PDF analiz hatası: "+err.message)}
+          setKbProcessing(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // EXCEL / CSV → SheetJS ile oku, metin olarak ekle
+      if(['xlsx','xls','csv'].includes(ext)){
+        const XLSX=await loadXLSX();
+        const buf=await file.arrayBuffer();
+        const wb=XLSX.read(buf);
+        let text="";
+        wb.SheetNames.slice(0,5).forEach(sn=>{
+          text+=`\nSheet: ${sn}\n`;
+          XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}).slice(0,80)
+            .forEach(r=>{const l=r.map(c=>String(c).trim()).filter(Boolean).join(" | ");if(l)text+=l+'\n'});
+        });
+        const header=`\n\n--- ${file.name} dosyasından çıkarılan bilgiler (${new Date().toLocaleDateString('tr-TR')}) ---\n`;
+        setKbText(prev=>prev+header+text.slice(0,5000)+"\n---\n");
+        setKbMsg("✅ Excel okundu, içerik eğitim metnine eklendi!");
+        setKbProcessing(false);
+        return;
+      }
+
+      setKbMsg("❌ Desteklenen: JPG, PNG, GIF, WebP, PDF, Excel (.xlsx .xls .csv)");
+      setKbProcessing(false);
+    }catch(e){
+      setKbMsg("❌ Dosya okuma hatası: "+e.message);
+      setKbProcessing(false);
+    }
+  };
+
   /* ── Promo Kaydet ── */
   const savePromos=async()=>{
     setPromoSaving(true);setPromoMsg("Kaydediliyor...");
@@ -1192,6 +1278,23 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
           <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>🤖 Chatbot Eğitimi</h3>
           <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>Chatbot'a yeni kurallar, tarife bilgileri, kampanya detayları ve direktifler verin. Bu metin her sohbette AI asistanın bilgi tabanına eklenir.</p>
+
+          {/* Dosyadan içe aktar */}
+          <div style={{background:"#fff",border:"1px solid var(--brd)",borderRadius:8,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+            <div style={{flex:1,minWidth:150}}>
+              <div style={{fontSize:11,fontWeight:700,color:"var(--txt)",marginBottom:2}}>📂 Dosyadan İçe Aktar</div>
+              <div style={{fontSize:9,color:"var(--txt3)",lineHeight:1.4}}>Tarife listesi veya kampanya belgesi yükle → AI analiz edip eğitim metnine ekler</div>
+              <div style={{fontSize:9,color:"var(--acc)",marginTop:2}}>✅ JPG &nbsp;✅ PNG &nbsp;✅ GIF &nbsp;✅ PDF &nbsp;✅ Excel</div>
+            </div>
+            <input ref={kbFileRef} type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv"
+              onChange={e=>{if(e.target.files[0]){processKBFile(e.target.files[0]);e.target.value=""}}}
+              style={{display:"none"}}/>
+            <button onClick={()=>kbFileRef.current?.click()} disabled={kbProcessing}
+              style={{background:kbProcessing?"var(--bg2)":"var(--acc)",border:"none",borderRadius:8,padding:"8px 16px",color:kbProcessing?"var(--txt3)":"#fff",fontWeight:700,fontSize:11,cursor:kbProcessing?"default":"pointer",fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0,transition:"all .2s"}}>
+              {kbProcessing?"⏳ Analiz ediliyor...":"📎 Dosya Yükle"}
+            </button>
+          </div>
+
           <textarea value={kbText} onChange={e=>setKbText(e.target.value)} placeholder={"Örnek kurallar:\n\n- iPhone 17 Pro Max için özel EGYG kampanyası var\n- Bu hafta MNT'de ekstra 50 GB hediye\n- Cayma bedeli itirazında önce 300 TL çek teklif et\n- Samsung S26 için 36 ay taksit kampanyası başladı\n- Yeni tarife: Platinum 150 GB — 1.200 TL/ay\n- Müşteri 'pahalı' derse ön ödemeli pakete yönlendir"} style={{width:"100%",minHeight:200,border:"1px solid var(--brd)",borderRadius:8,padding:12,fontSize:12,fontFamily:"inherit",lineHeight:1.6,resize:"vertical",outline:"none",background:"#fff"}}/>
           <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
             <button onClick={saveKB} disabled={kbSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:kbSaving?.5:1}}>{kbSaving?"⏳ Kaydediliyor...":"💾 Kaydet & Yayınla"}</button>
