@@ -340,12 +340,19 @@ function PromoCarousel({onNav,dynPromos}){
   const promos=(dynPromos&&dynPromos.length>0)?dynPromos:defaultPromos;
   useEffect(()=>{const t=setInterval(()=>setIdx(i=>(i+1)%promos.length),4000);return()=>clearInterval(t)},[]);
   const p=promos[idx];
+  const hasImg=p.imageUrl&&p.imageUrl.trim();
   return(
     <div style={{position:"relative",overflow:"hidden"}}>
-      <div onClick={()=>onNav(p.action)} style={{background:`linear-gradient(135deg,${p.color},${p.color}dd)`,borderRadius:16,padding:"20px 24px",cursor:"pointer",transition:"all .5s ease",minHeight:100,display:"flex",flexDirection:"column",justifyContent:"center",boxShadow:`0 4px 20px ${p.color}33`}}>
-        <div style={{fontSize:11,color:"rgba(255,255,255,.7)",fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:1}}>{p.title}</div>
-        <div style={{fontSize:20,fontWeight:900,color:"#fff",marginBottom:4}}>{p.sub}</div>
-        <div style={{fontSize:12,color:"rgba(255,255,255,.85)",lineHeight:1.4}}>{p.desc}</div>
+      <div onClick={()=>onNav(p.action)} style={{background:hasImg?"#000":`linear-gradient(135deg,${p.color},${p.color}dd)`,borderRadius:16,padding:"20px 24px",cursor:"pointer",transition:"all .5s ease",minHeight:100,display:"flex",flexDirection:"column",justifyContent:"center",boxShadow:`0 4px 20px ${p.color}33`,position:"relative",overflow:"hidden"}}>
+        {/* Arka plan resmi — JPG PNG GIF WebP SVG desteklenir, GIF animasyonlu çalışır */}
+        {hasImg&&<img src={p.imageUrl} alt="" onError={e=>e.target.style.display='none'} style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover"}}/>}
+        {/* Metin okunurluğu için karartma */}
+        {hasImg&&<div style={{position:"absolute",inset:0,background:`linear-gradient(135deg,${p.color||"rgba(0,0,0,.7)"}bb,rgba(0,0,0,.3))`}}/>}
+        <div style={{position:"relative",zIndex:1}}>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.7)",fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:1}}>{p.title}</div>
+          <div style={{fontSize:20,fontWeight:900,color:"#fff",marginBottom:4}}>{p.sub}</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,.85)",lineHeight:1.4}}>{p.desc}</div>
+        </div>
       </div>
       {/* Dots */}
       <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:10}}>
@@ -746,7 +753,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const[promoMsg,setPromoMsg]=useState("");
   const[promoSaving,setPromoSaving]=useState(false);
   const[editIdx,setEditIdx]=useState(null);
-  const[editForm,setEditForm]=useState({title:"",sub:"",desc:"",color:"#253B80",action:"phone"});
+  const[editForm,setEditForm]=useState({title:"",sub:"",desc:"",color:"#253B80",action:"phone",imageUrl:""});
   const colorOpts=["#253B80","#1428A0","#3A5BC7","#E8A800","#00B4D8","#25D366","#0d7c3d","#D4548A","#E17055","#7B61FF","#636e72","#FF6B6B","#1a1a2e"];
   const actionOpts=[{v:"phone",l:"Telefon"},{v:"tablet",l:"Tablet"},{v:"notebook",l:"Notebook"},{v:"aksesuar",l:"Aksesuar"},{v:"tariff",l:"Tarife"},{v:"internet",l:"Ev İnterneti"},{v:"contact",l:"İletişim"}];
   // Tarife OCR state
@@ -1036,7 +1043,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     setPromoSaving(false);
   };
 
-  const startEdit=(i)=>{setEditIdx(i);setEditForm(i===null?{title:"",sub:"",desc:"",color:"#253B80",action:"phone"}:{...promos[i]})};
+  const startEdit=(i)=>{setEditIdx(i);setEditForm(i===null?{title:"",sub:"",desc:"",color:"#253B80",action:"phone",imageUrl:""}:{...promos[i],imageUrl:promos[i].imageUrl||""})};
   const saveEdit=()=>{
     if(!editForm.title||!editForm.sub)return;
     const np=[...promos];
@@ -1253,9 +1260,22 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
                 <select value={editForm.action} onChange={e=>setEditForm({...editForm,action:e.target.value})} style={{border:"1px solid var(--brd)",borderRadius:6,padding:"5px 8px",fontSize:10,fontFamily:"inherit"}}>
                   {actionOpts.map(a=>(<option key={a.v} value={a.v}>{a.l}</option>))}
                 </select>
+                {/* Resim URL — JPG PNG GIF WebP SVG, GIF animasyonlu çalışır ✅ */}
+                <div style={{gridColumn:"1 / -1"}}>
+                  <div style={{fontSize:9,color:"var(--txt3)",marginBottom:3}}>Arka Plan Resmi URL — Önerilen: 1200×628px &nbsp;✅ JPG &nbsp;✅ PNG &nbsp;✅ GIF (animasyonlu) &nbsp;✅ WebP</div>
+                  <input value={editForm.imageUrl||""} onChange={e=>setEditForm({...editForm,imageUrl:e.target.value})}
+                    placeholder="https://örnek.com/reklam.gif  (boş = renk gradyan)"
+                    style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:10,fontFamily:"inherit",outline:"none"}}/>
+                  {editForm.imageUrl&&(
+                    <div style={{marginTop:4,borderRadius:6,overflow:"hidden",height:48,border:"1px solid var(--brd)",position:"relative"}}>
+                      <img src={editForm.imageUrl} alt="önizleme" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex"}}/>
+                      <div style={{display:"none",position:"absolute",inset:0,alignItems:"center",justifyContent:"center",fontSize:10,color:"#dc3545",background:"var(--bg2)"}}>⚠️ Resim yüklenemedi</div>
+                    </div>
+                  )}
+                </div>
               </div>
               <button onClick={saveEdit} style={{background:"var(--acc)",border:"none",borderRadius:6,padding:"7px 14px",color:"#fff",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{editIdx!==null?"✓ Güncelle":"+ Ekle"}</button>
-              {editIdx!==null&&<button onClick={()=>{setEditIdx(null);setEditForm({title:"",sub:"",desc:"",color:"#253B80",action:"phone"})}} style={{background:"var(--bg2)",border:"1px solid var(--brd)",borderRadius:6,padding:"7px 14px",color:"var(--txt3)",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>İptal</button>}
+              {editIdx!==null&&<button onClick={()=>{setEditIdx(null);setEditForm({title:"",sub:"",desc:"",color:"#253B80",action:"phone",imageUrl:""})}} style={{background:"var(--bg2)",border:"1px solid var(--brd)",borderRadius:6,padding:"7px 14px",color:"var(--txt3)",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>İptal</button>}
             </div>
           </div>
 
@@ -1270,14 +1290,16 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
 /* ═══ CHATBOT (AI + Local + Voice + Widget + Fullpage) ═══ */
 
 function ChatBotSystem({fullPage=false, onClose}){
-  const[messages,setMessages]=useState([{role:"assistant",content:"Merhaba! 👋 Ben Elfin İletişim'in dijital asistanıyım. Telefon, tarife, ev interneti, aksesuar... ne sorarsan sor! Sesli de sorabilirsin 🎤"}]);
+  const[messages,setMessages]=useState([{role:"assistant",content:"Merhaba! 👋 Ben Elfin İletişim'in dijital asistanıyım. Telefon, tarife, ev interneti, aksesuar... ne sorarsan sor! Sesli de sorabilirsin 🎤\n\n📎 Excel, JPEG, GIF veya PDF de ekleyebilirsin!"}]);
   const[input,setInput]=useState("");
   const[loading,setLoading]=useState(false);
   const[listening,setListening]=useState(false);
   const[speaking,setSpeaking]=useState(false);
   const[extraKB,setExtraKB]=useState("");
+  const[attachedFile,setAttachedFile]=useState(null);
   const chatRef=useRef(null);
   const inputRef=useRef(null);
+  const fileRef=useRef(null);
   const recognitionRef=useRef(null);
 
   useEffect(()=>{if(chatRef.current)chatRef.current.scrollTop=chatRef.current.scrollHeight},[messages,loading]);
@@ -1306,7 +1328,47 @@ EK TALİMATLAR:
 - Telefon: 0532 682 22 77
 - Çalışma saatleri: Hafta içi ve Cumartesi 09:00-22:00, Pazar 11:00-22:00
 - Cevaplarını düz metin yaz, markdown formatı (**, ##, vb.) KULLANMA.
-- Konu dışı sorularda (politika, din, kişisel sorular vb.) "Ben sadece Elfin İletişim ürün ve hizmetleri konusunda yardımcı olabilirim 😊" de.`+(extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:"");
+- DOSYA ANALİZİ: Excel/PDF/görsel geldiğinde tarife, ürün, fiyat bilgisi varsa çıkart ve özetle.`+(extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:"");
+
+  /* ── XLSX LAZY LOAD ── */
+  const loadXLSX=()=>new Promise(resolve=>{
+    if(window.XLSX)return resolve(window.XLSX);
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=()=>resolve(window.XLSX);
+    document.head.appendChild(s);
+  });
+
+  /* ── DOSYA İŞLEME ── */
+  const processFile=async(file)=>{
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(['jpg','jpeg','png','webp','gif'].includes(ext)){
+      const reader=new FileReader();
+      reader.onload=e=>setAttachedFile({type:'image',name:file.name,content:e.target.result.split(',')[1],mimeType:file.type||'image/jpeg',preview:e.target.result});
+      reader.readAsDataURL(file);
+    }else if(ext==='pdf'){
+      if(file.size>5*1024*1024){alert("PDF max 5 MB olmalı.");return}
+      const reader=new FileReader();
+      reader.onload=e=>setAttachedFile({type:'pdf',name:file.name,content:e.target.result.split(',')[1],mimeType:'application/pdf',preview:null});
+      reader.readAsDataURL(file);
+    }else if(['xlsx','xls','csv'].includes(ext)){
+      try{
+        const XLSX=await loadXLSX();
+        const buf=await file.arrayBuffer();
+        const wb=XLSX.read(buf);
+        let text=`Excel: ${file.name}\n\n`;
+        wb.SheetNames.slice(0,4).forEach(sn=>{
+          text+=`--- ${sn} ---\n`;
+          XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}).slice(0,60)
+            .forEach(r=>{const l=r.map(c=>String(c).trim()).filter(Boolean).join('\t');if(l)text+=l+'\n'});
+          text+='\n';
+        });
+        setAttachedFile({type:'excel',name:file.name,content:text.slice(0,4000),preview:null});
+      }catch(e){alert("Excel okunamadı: "+e.message)}
+    }else{
+      alert("Desteklenen: JPG PNG GIF WebP PDF Excel (.xlsx .xls .csv)");
+    }
+  };;
 
   /* ── SPEECH RECOGNITION ── */
   const startListening=()=>{
@@ -1410,9 +1472,21 @@ EK TALİMATLAR:
   /* ── SEND ── */
   const handleSend=async(text)=>{
     const msg=text||input.trim();
-    if(!msg||loading)return;
-    const updated=[...messages,{role:"user",content:msg}];
-    setMessages(updated);setInput("");setLoading(true);
+    if((!msg&&!attachedFile)||loading)return;
+    let apiContent;
+    const display=msg||(attachedFile?`📎 ${attachedFile.name}`:"");
+    const preview=attachedFile?.preview||null;
+    if(attachedFile){
+      if(attachedFile.type==='image'){
+        apiContent=[{type:'text',text:msg||'Bu görseli analiz et. Turkcell tarife veya ürün bilgisi varsa çıkart.'},{type:'image',source:{type:'base64',media_type:attachedFile.mimeType,data:attachedFile.content}}];
+      }else if(attachedFile.type==='pdf'){
+        apiContent=[{type:'text',text:msg||'Bu PDF belgesini analiz et. Tarife, fiyat veya ürün bilgisi varsa özetle.'},{type:'document',source:{type:'base64',media_type:'application/pdf',data:attachedFile.content}}];
+      }else{
+        apiContent=(msg?msg+'\n\n':'')+attachedFile.content;
+      }
+    }else{apiContent=msg}
+    const updated=[...messages,{role:"user",content:apiContent,_display:display,_preview:preview}];
+    setMessages(updated);setInput("");setAttachedFile(null);setLoading(true);
 
     let reply;
     try{reply=await aiReply(updated)}
@@ -1447,15 +1521,19 @@ EK TALİMATLAR:
 
       {/* Messages */}
       <div ref={chatRef} style={{flex:1,overflowY:"auto",padding:"12px",display:"flex",flexDirection:"column",gap:8,background:"var(--bg2)",WebkitOverflowScrolling:"touch"}}>
-        {messages.map((m,i)=>(
+        {messages.map((m,i)=>{
+          const disp=m._display||(typeof m.content==="string"?m.content:(m.content?.[0]?.text||"📎 dosya"));
+          return(
           <div key={i} style={{display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",alignItems:"flex-end",gap:6}}>
             {m.role==="assistant"&&<div style={{width:26,height:26,borderRadius:13,overflow:"hidden",background:"var(--tc)",flexShrink:0}}><img src={TC_CHAT_IMG} alt="" style={{width:26,height:26,objectFit:"cover"}}/></div>}
             <div style={{maxWidth:"80%",position:"relative"}}>
-              <div style={{padding:"10px 14px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"var(--acc)":"#fff",color:m.role==="user"?"#fff":"var(--txt)",fontSize:13,lineHeight:1.55,boxShadow:m.role==="user"?"none":"0 1px 4px rgba(0,0,0,.06)",wordBreak:"break-word",whiteSpace:"pre-line"}}>{m.content}</div>
-              {m.role==="assistant"&&i>0&&<button onClick={()=>speakText(m.content)} style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:11,background:"var(--blt)",border:"1px solid var(--brd)",color:"var(--acc)",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>🔊</button>}
+              {m._preview&&<img src={m._preview} alt="ek" style={{maxWidth:"100%",borderRadius:"12px 12px 4px 12px",marginBottom:4,display:"block",maxHeight:160,objectFit:"cover"}}/>}
+              <div style={{padding:"10px 14px",borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px",background:m.role==="user"?"var(--acc)":"#fff",color:m.role==="user"?"#fff":"var(--txt)",fontSize:13,lineHeight:1.55,boxShadow:m.role==="user"?"none":"0 1px 4px rgba(0,0,0,.06)",wordBreak:"break-word",whiteSpace:"pre-line"}}>{disp}</div>
+              {m.role==="assistant"&&i>0&&<button onClick={()=>speakText(disp)} style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:11,background:"var(--blt)",border:"1px solid var(--brd)",color:"var(--acc)",fontSize:10,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>🔊</button>}
             </div>
           </div>
-        ))}
+          );
+        })}
         {loading&&(
           <div style={{display:"flex",alignItems:"flex-end",gap:6}}>
             <div style={{width:26,height:26,borderRadius:13,overflow:"hidden",background:"var(--tc)"}}><img src={TC_CHAT_IMG} alt="" style={{width:26,height:26,objectFit:"cover"}}/></div>
@@ -1471,14 +1549,32 @@ EK TALİMATLAR:
         {["📱 Telefon fiyat","📡 Tarife öner","🏠 Ev interneti","⚡ 5G modeller","🎁 Kampanyalar","📍 Adres","💬 Switch nedir"].map((q,i)=>(<button key={i} onClick={()=>handleSend(q)} style={{flex:"0 0 auto",background:"var(--blt)",border:"1px solid var(--brd)",borderRadius:16,padding:"4px 11px",fontSize:10,color:"var(--acc)",fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{q}</button>))}
       </div>
 
-      {/* Input + Mic */}
+      {/* Ekli Dosya Önizleme */}
+      {attachedFile&&(
+        <div style={{padding:"6px 12px",background:"var(--blt)",borderTop:"1px solid var(--brd)",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          {attachedFile.preview
+            ?<img src={attachedFile.preview} alt="" style={{width:36,height:36,borderRadius:6,objectFit:"cover",flexShrink:0}}/>
+            :<div style={{width:36,height:36,borderRadius:6,background:"var(--acc)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{attachedFile.type==='pdf'?"📄":attachedFile.type==='excel'?"📊":"📎"}</div>
+          }
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:10,fontWeight:700,color:"var(--txt)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{attachedFile.name}</div>
+            <div style={{fontSize:9,color:"var(--txt3)"}}>Gönderilecek • AI analiz edecek</div>
+          </div>
+          <button onClick={()=>setAttachedFile(null)} style={{background:"none",border:"none",color:"#dc3545",cursor:"pointer",fontSize:18,fontWeight:700,flexShrink:0}}>✕</button>
+        </div>
+      )}
+
+      {/* Input + Mic + Dosya */}
       <div style={{padding:"8px 12px 10px",display:"flex",gap:6,alignItems:"center",background:"#fff",borderTop:"1px solid var(--brd)",flexShrink:0}}>
+        {/* Dosya Ekle */}
+        <input ref={fileRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.xlsx,.xls,.csv" onChange={e=>{if(e.target.files[0]){processFile(e.target.files[0]);e.target.value=""}}} style={{display:"none"}}/>
+        <button onClick={()=>fileRef.current?.click()} title="Dosya ekle: JPG PNG GIF PDF Excel" style={{width:40,height:40,borderRadius:20,background:attachedFile?"var(--tc)":"var(--blt)",border:"1px solid "+(attachedFile?"var(--tcD)":"var(--brd)"),color:attachedFile?"#000":"var(--txt2)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>📎</button>
         <button onClick={listening?stopListening:startListening} style={{width:40,height:40,borderRadius:20,background:listening?"#FF4444":"var(--blt)",border:listening?"none":"1px solid var(--brd)",color:listening?"#fff":"var(--acc)",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,animation:listening?"pulse5g 1s infinite":"none"}}>🎤</button>
         <input ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey)handleSend()}}
-          placeholder={listening?"Dinliyorum...":"Mesajınızı yazın veya 🎤 basın"}
+          placeholder={listening?"Dinliyorum...":attachedFile?"Dosya hakkında soru yaz (opsiyonel)":"Mesajınızı yazın veya 🎤 basın"}
           style={{flex:1,padding:"10px 14px",background:listening?"rgba(255,68,68,.06)":"var(--bg2)",border:"1px solid "+(listening?"#FF4444":"var(--brd)"),borderRadius:20,color:"var(--txt)",fontSize:13,fontFamily:"inherit",outline:"none"}} />
-        <button id="elfin-send" onClick={()=>handleSend()} disabled={!input.trim()||loading}
-          style={{width:40,height:40,borderRadius:20,background:input.trim()&&!loading?"var(--acc)":"var(--bg2)",border:"none",color:input.trim()&&!loading?"#fff":"var(--txt3)",fontSize:16,cursor:input.trim()&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>➤</button>
+        <button id="elfin-send" onClick={()=>handleSend()} disabled={(!input.trim()&&!attachedFile)||loading}
+          style={{width:40,height:40,borderRadius:20,background:(input.trim()||attachedFile)&&!loading?"var(--acc)":"var(--bg2)",border:"none",color:(input.trim()||attachedFile)&&!loading?"#fff":"var(--txt3)",fontSize:16,cursor:(input.trim()||attachedFile)&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>➤</button>
       </div>
     </div>
   );
