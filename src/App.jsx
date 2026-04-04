@@ -1582,6 +1582,8 @@ function ChatBotSystem({fullPage=false, onClose}){
   const[speaking,setSpeaking]=useState(false);
   const[extraKB,setExtraKB]=useState("");
   const[attachedFile,setAttachedFile]=useState(null);
+  const[siteData,setSiteData]=useState({tariffs:null,devices:null,eiDocs:null});
+  const[conflictWarnings,setConflictWarnings]=useState([]);
   const chatRef=useRef(null);
   const inputRef=useRef(null);
   const fileRef=useRef(null);
@@ -1590,10 +1592,46 @@ function ChatBotSystem({fullPage=false, onClose}){
   useEffect(()=>{if(chatRef.current)chatRef.current.scrollTop=chatRef.current.scrollHeight},[messages,loading]);
   useEffect(()=>{if(inputRef.current)inputRef.current.focus()},[]);
   useEffect(()=>{
-    fetch("/chatbot_kb_extra.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+    const t=Date.now();
+    // Özel direktifler
+    fetch("/chatbot_kb_extra.json?t="+t).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&d.content)setExtraKB(d.content);
     }).catch(()=>{});
+    // Güncel tarifeler
+    fetch("/tariffs_custom.json?t="+t).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&Array.isArray(d.tarifeler))setSiteData(s=>({...s,tariffs:d.tarifeler}));
+    }).catch(()=>{});
+    // Güncel cihazlar
+    fetch("/devices.json?t="+t).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&d.telefon)setSiteData(s=>({...s,devices:d}));
+    }).catch(()=>{});
+    // Ev interneti belgeleri
+    fetch("/evinternet_docs.json?t="+t).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&Array.isArray(d.docs))setSiteData(s=>({...s,eiDocs:d.docs}));
+    }).catch(()=>{});
   },[]);
+
+  // Cihazları özet olarak hazırla (token tasarrufu için sadece isim+fiyat)
+  const buildDeviceSummary=()=>{
+    if(!siteData.devices)return "";
+    const fmt=(arr,tip)=>(arr||[]).slice(0,60).map(d=>`${d.m} ${d.n}: ${d.p} TL peşin`).join("\n");
+    return `\n\n--- GÜNCEL CİHAZ FİYATLARI (siteden canlı) ---\nTELEFONLAR:\n${fmt(siteData.devices.telefon,"tel")}\n\nTABLETLER:\n${fmt(siteData.devices.tablet,"tab")}\n\nNOTEBOOKLAR:\n${fmt(siteData.devices.notebook,"nb")}\n---`;
+  };
+
+  const buildTariffSummary=()=>{
+    if(!siteData.tariffs)return "";
+    return "\n\n--- GÜNCEL TARİFELER (admin panelinden güncel) ---\n"+
+      siteData.tariffs.map(kat=>`\n[${kat.ad}] ${kat.sure} | ${kat.aciklama||""}\n`+
+        (kat.tarifeler||[]).map(t=>`  • ${t.ad}: ${t.gb>0?t.gb+" GB":""}${t.dk>0?" "+t.dk+" DK":""}${t.sms>0?" "+t.sms+" SMS":""} → ${t.fiyat} TL/ay`).join("\n")
+      ).join("\n")+"\n---";
+  };
+
+  const buildEiSummary=()=>{
+    if(!siteData.eiDocs||!siteData.eiDocs.length)return "";
+    return "\n\n--- GÜNCEL EV İNTERNETİ BELGELERİ (admin panelinden) ---\n"+
+      siteData.eiDocs.map(d=>d.type==="text"?`[${d.name} - ${d.date}]\n${d.content||""}`:
+        `[${d.name} - ${d.date}] (görsel kampanya belgesi)`).join("\n\n")+"\n---";
+  };
 
   const systemPrompt=`${CHATBOT_KB}
 
@@ -1613,7 +1651,13 @@ EK TALİMATLAR:
 - Telefon: 0532 682 22 77
 - Çalışma saatleri: Hafta içi ve Cumartesi 09:00-22:00, Pazar 11:00-22:00
 - Cevaplarını düz metin yaz, markdown formatı (**, ##, vb.) KULLANMA.
-- DOSYA ANALİZİ: Excel/PDF/görsel geldiğinde tarife, ürün, fiyat bilgisi varsa çıkart ve özetle.`+(extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:"");
+- DOSYA ANALİZİ: Excel/PDF/görsel geldiğinde tarife, ürün, fiyat bilgisi varsa çıkart ve özetle.
+- VERİ ÖNCELİĞİ: "GÜNCEL" diye işaretlenmiş veriler (tarifeler, cihazlar, ev interneti) her zaman gömülü bilgiden önce gelir. Çelişki varsa güncel veriyi kullan.
+
+ÇELİŞKİ TESPİTİ — ÇOK ÖNEMLİ:
+Eğer "MAĞAZA SAHİBİNDEN EK KURALLAR" bölümündeki bir direktif ile "GÜNCEL" veriler arasında açık bir çelişki fark edersen (örn: direktifte "X tarifesi 300 TL" yazıyor ama güncel tarife listesinde 350 TL görünüyor), cevabının EN SONUNA şu formatı EKLE:
+[ÇELİŞKİ: <kısa açıklama>]
+Bu etiketi sadece gerçek çelişkilerde kullan, her mesajda ekleme.${buildTariffSummary()}${buildDeviceSummary()}${buildEiSummary()}${extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:""}`;
 
   /* ── XLSX LAZY LOAD ── */
   const loadXLSX=()=>new Promise(resolve=>{
@@ -1777,6 +1821,14 @@ EK TALİMATLAR:
     try{reply=await aiReply(updated)}
     catch(e){reply=localReply(msg)||"Şu an AI asistana ulaşamıyorum ama yardımcı olayım! 😊\n\nSorabilirsiniz:\n📱 Telefon fiyatları\n📡 Tarife bilgisi\n🏠 Ev interneti\n📍 Mağaza bilgisi\n\nWhatsApp: 0532 682 22 77 💬"}
 
+    // Çelişki etiketini tespit et ve ayıkla
+    const conflictMatch=reply.match(/\[ÇELİŞKİ:\s*(.+?)\]/s);
+    if(conflictMatch){
+      const conflictText=conflictMatch[1].trim();
+      setConflictWarnings(prev=>[{text:conflictText,ts:new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})},...prev].slice(0,10));
+      reply=reply.replace(/\[ÇELİŞKİ:.*?\]/s,"").trim();
+    }
+
     setMessages(prev=>[...prev,{role:"assistant",content:reply}]);
     setLoading(false);
     if(reply.length<250)setTimeout(()=>speakText(reply),500);
@@ -1803,6 +1855,21 @@ EK TALİMATLAR:
           {onClose&&<button onClick={()=>{stopSpeaking();stopListening();onClose()}} style={{background:"rgba(255,255,255,.15)",border:"none",color:"#fff",width:32,height:32,borderRadius:16,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>}
         </div>
       </div>
+
+      {/* Çelişki Uyarıları — sadece admin görür */}
+      {conflictWarnings.length>0&&(
+        <div style={{background:"#fffbeb",borderBottom:"1px solid #f59e0b",padding:"8px 12px",maxHeight:100,overflowY:"auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <span style={{fontSize:10,fontWeight:800,color:"#b45309"}}>⚠️ ÇELİŞKİ TESPİT EDİLDİ ({conflictWarnings.length})</span>
+            <button onClick={()=>setConflictWarnings([])} style={{background:"none",border:"none",color:"#b45309",fontSize:10,cursor:"pointer",fontWeight:700}}>Temizle ✕</button>
+          </div>
+          {conflictWarnings.map((w,i)=>(
+            <div key={i} style={{fontSize:10,color:"#92400e",padding:"3px 0",borderTop:i>0?"1px solid #fde68a":"none"}}>
+              <span style={{color:"#b45309",fontWeight:700}}>{w.ts}</span> — {w.text}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={chatRef} style={{flex:1,overflowY:"auto",padding:"12px",display:"flex",flexDirection:"column",gap:8,background:"var(--bg2)",WebkitOverflowScrolling:"touch"}}>
