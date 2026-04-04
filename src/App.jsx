@@ -96,6 +96,7 @@ export default function App(){
   const[dynDevices,setDynDevices]=useState(null);
   const[chatbotExtra,setChatbotExtra]=useState("");
   const[dynPromos,setDynPromos]=useState(null);
+  const[evInternetDocs,setEvInternetDocs]=useState([]);
 
   // Try loading fresh data from devices.json, promos.json, chatbot_kb_extra.json
   useEffect(()=>{
@@ -117,6 +118,10 @@ export default function App(){
 
     fetch("/tariffs_custom.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&Array.isArray(d.tarifeler)&&d.tarifeler.length>0){setTariffs(d.tarifeler);console.log("[Elfin] tariffs_custom.json yüklendi:",d.tarifeler.length,"kategori")}
+    }).catch(()=>{});
+
+    fetch("/evinternet_docs.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&Array.isArray(d.docs)){setEvInternetDocs(d.docs);console.log("[Elfin] evinternet_docs.json yüklendi:",d.docs.length,"belge")}
     }).catch(()=>{});
   },[]);
 
@@ -183,7 +188,7 @@ export default function App(){
       <ChatBot />
 
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onLogin={u=>{setUser(u);setShowAuth(false)}} />}
-      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} onClose={()=>setShowAdmin(false)} />}
+      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} onClose={()=>setShowAdmin(false)} />}
 
       <main style={{maxWidth:1440,margin:"0 auto",padding:"0 20px"}}>
         {page==="home"&&<Home onNav={navigate} devices={devices}/>}
@@ -192,7 +197,7 @@ export default function App(){
         {page==="notebook"&&<DevicePage data={devices.notebook} title="Notebooklar" sub={`${devices.notebook.length} model`} backRef={backRef}/>}
         {page==="aksesuar"&&<DevicePage data={devices.aksesuar} title="Aksesuarlar" sub={`${devices.aksesuar.length} ürün`} isAksesuar={true} backRef={backRef}/>}
         {page==="tariff"&&<TariffPage tariffs={tariffs}/>}
-        {page==="internet"&&<EvInternetiPage/>}
+        {page==="internet"&&<EvInternetiPage evInternetDocs={evInternetDocs}/>}
         {page==="contact"&&<Contact/>}
       </main>
 
@@ -605,7 +610,7 @@ function BarStat({label,value,pct,color}){return(<div style={{background:"var(--
 
 /* ═══ CONTACT ═══ */
 /* ═══ EV İNTERNETİ PAGE ═══ */
-function EvInternetiPage(){
+function EvInternetiPage({evInternetDocs=[]}){
   const[tab,setTab]=useState("fiber");
   const[selectedPlan,setSelectedPlan]=useState(null);
   const fiberPlans=[
@@ -635,6 +640,37 @@ function EvInternetiPage(){
   return(
     <div className="au" style={{paddingTop:28}}>
       <div style={{textAlign:"center",marginBottom:18}}><h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(20px,3.5vw,30px)",fontWeight:800,color:"var(--acc)",marginBottom:4}}>Ev İnterneti</h2><p style={{fontSize:12,color:"var(--txt2)"}}>Fiber, Superbox, TV+ — Evinize özel çözümler</p></div>
+
+      {/* ── Güncel Kampanya Belgeleri ── */}
+      {evInternetDocs.length>0&&(
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--acc)",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+            <span>📢 Güncel Kampanyalar</span>
+            <span style={{background:"var(--tc)",color:"#000",fontSize:9,fontWeight:800,padding:"2px 7px",borderRadius:8}}>{evInternetDocs.length}</span>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:12}}>
+            {evInternetDocs.map((doc,i)=>(
+              <div key={doc.id||i} className="ac" style={{background:"#fff",borderRadius:14,border:"1px solid var(--brd)",overflow:"hidden",boxShadow:"var(--sh)",animationDelay:`${i*.05}s`,animationFillMode:"both"}}>
+                {doc.type==="image"
+                  ?<img src={`data:${doc.mimeType};base64,${doc.data}`} alt={doc.name} style={{width:"100%",maxHeight:200,objectFit:"contain",display:"block",background:"var(--bg2)"}}/>
+                  :(
+                    <div style={{padding:14}}>
+                      <div style={{fontSize:13,fontWeight:700,color:"var(--acc)",marginBottom:8,display:"flex",gap:8,alignItems:"center"}}>
+                        <span>📄</span><span>{doc.name}</span>
+                      </div>
+                      <pre style={{fontSize:10,color:"var(--txt2)",lineHeight:1.6,whiteSpace:"pre-wrap",margin:0,maxHeight:200,overflowY:"auto",fontFamily:"inherit"}}>{doc.content}</pre>
+                    </div>
+                  )
+                }
+                <div style={{padding:"8px 12px",borderTop:"1px solid var(--brd)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:10,fontWeight:600,color:"var(--txt)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{doc.name}</div>
+                  <div style={{fontSize:9,color:"var(--txt3)",flexShrink:0,marginLeft:8}}>{doc.date}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
         {tabs.map(t=>(<button key={t.k} onClick={()=>{setTab(t.k);setSelectedPlan(null)}} style={{background:tab===t.k?"var(--acc)":"#fff",color:tab===t.k?"#fff":"var(--txt2)",border:tab===t.k?"none":"1px solid var(--brd)",borderRadius:10,padding:"9px 18px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:tab===t.k?"0 4px 10px rgba(37,59,128,.18)":"var(--sh)"}}>{t.l}</button>))}
       </div>
@@ -732,12 +768,18 @@ function AuthModal({onClose,onLogin}){
 }
 
 /* ═══ ADMIN PANEL ═══ */
-function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotExtra,setChatbotExtra,onClose}){
+function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotExtra,setChatbotExtra,evInternetDocs,setEvInternetDocs,onClose}){
   const[tab,setTab]=useState("info");
   const phoneRef=useRef(null);
   const[uploadMsg,setUploadMsg]=useState("");
   const[uploading,setUploading]=useState(false);
   const[preview,setPreview]=useState(null);
+  // Ev İnterneti Belgeler state
+  const[eiDocs,setEiDocs]=useState(evInternetDocs||[]);
+  const[eiMsg,setEiMsg]=useState("");
+  const[eiProcessing,setEiProcessing]=useState(false);
+  const[eiSaving,setEiSaving]=useState(false);
+  const eiFileRef=useRef(null);
   // Chatbot state
   const[kbText,setKbText]=useState(chatbotExtra||"");
   const[kbMsg,setKbMsg]=useState("");
@@ -1139,6 +1181,85 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const deletePromo=(i)=>{if(window.confirm("Bu reklamı silmek istediğinize emin misiniz?"))setPromos(promos.filter((_,j)=>j!==i))};
   const movePromo=(i,dir)=>{const np=[...promos];const t=np[i];np[i]=np[i+dir];np[i+dir]=t;setPromos(np)};
 
+  /* ── Ev İnterneti Belge Yükle ── */
+  const saveEiDocs=async(newDocs)=>{
+    setEiSaving(true);setEiMsg("Kaydediliyor...");
+    try{
+      const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        password:"elfin2026",file:"public/evinternet_docs.json",
+        data:{docs:newDocs,_updated:new Date().toISOString()},
+        message:"Ev interneti belge guncelleme - "+new Date().toLocaleDateString("tr-TR")
+      })});
+      const d=await res.json();
+      if(d.success){setEiMsg("✅ Kaydedildi! ~30sn içinde sitede görünecek.");setEvInternetDocs(newDocs);setEiDocs(newDocs)}
+      else{setEiMsg("❌ "+d.error)}
+    }catch(e){setEiMsg("❌ "+e.message)}
+    setEiSaving(false);
+  };
+
+  const processEiFile=async(file)=>{
+    const ext=file.name.split('.').pop().toLowerCase();
+    setEiProcessing(true);setEiMsg("📂 "+file.name+" işleniyor...");
+    const docName=file.name.replace(/\.[^.]+$/,"");
+    const dateStr=new Date().toLocaleDateString("tr-TR");
+    try{
+      // GÖRSEL → base64 olarak sakla, sayfada resim olarak göster
+      if(['jpg','jpeg','png','webp','gif'].includes(ext)){
+        const reader=new FileReader();
+        reader.onload=async(e)=>{
+          const base64=e.target.result.split(',')[1];
+          const newDoc={id:Date.now(),name:docName,type:"image",mimeType:file.type||"image/jpeg",data:base64,date:dateStr};
+          const newDocs=[newDoc,...eiDocs].slice(0,6);
+          await saveEiDocs(newDocs);
+          setEiProcessing(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+      // PDF → Claude ile analiz
+      if(ext==='pdf'){
+        if(file.size>5*1024*1024){setEiMsg("❌ PDF max 5 MB olmalı.");setEiProcessing(false);return}
+        const reader=new FileReader();
+        reader.onload=async(e)=>{
+          const base64=e.target.result.split(',')[1];
+          try{
+            const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+              system:"Turkcell ev interneti bayi asistanısın. PDF'teki TÜM kampanya ve tarife bilgilerini çıkar: paket adı, hız, fiyat, taahhüt, özellikler. Düz metin, madde madde listele. Markdown kullanma.",
+              messages:[{role:"user",content:[{type:"document",source:{type:"base64",media_type:"application/pdf",data:base64}},{type:"text",text:"Bu PDF'teki tüm ev interneti tarife ve kampanya bilgilerini çıkar ve düz metin olarak listele."}]}]
+            })});
+            const d=await res.json();
+            const newDoc={id:Date.now(),name:docName,type:"text",content:d.reply||"(içerik çıkarılamadı)",date:dateStr};
+            const newDocs=[newDoc,...eiDocs].slice(0,6);
+            await saveEiDocs(newDocs);
+          }catch(err){setEiMsg("❌ PDF analiz hatası: "+err.message)}
+          setEiProcessing(false);
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+      // EXCEL → SheetJS ile parse
+      if(['xlsx','xls','csv'].includes(ext)){
+        const XLSX=await loadXLSX();
+        const buf=await file.arrayBuffer();
+        const wb=XLSX.read(buf);
+        let content="";
+        wb.SheetNames.slice(0,5).forEach(sn=>{
+          content+=`📋 ${sn}\n`;
+          XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:""}).slice(0,60)
+            .forEach(r=>{const l=r.map(c=>String(c).trim()).filter(Boolean).join(" | ");if(l)content+=l+'\n'});
+          content+='\n';
+        });
+        const newDoc={id:Date.now(),name:docName,type:"text",content:content.slice(0,5000),date:dateStr};
+        const newDocs=[newDoc,...eiDocs].slice(0,6);
+        await saveEiDocs(newDocs);
+        setEiProcessing(false);
+        return;
+      }
+      setEiMsg("❌ Desteklenen: JPG PNG GIF WebP PDF Excel (.xlsx .xls .csv)");
+      setEiProcessing(false);
+    }catch(e){setEiMsg("❌ "+e.message);setEiProcessing(false)}
+  };
+
   const msgBox=(msg)=>msg?<div style={{background:msg.includes("❌")?"rgba(220,53,69,.08)":msg.includes("✅")?"rgba(13,124,61,.08)":"rgba(37,59,128,.06)",border:"1px solid "+(msg.includes("❌")?"rgba(220,53,69,.2)":msg.includes("✅")?"rgba(13,124,61,.2)":"rgba(37,59,128,.15)"),borderRadius:8,padding:10,fontSize:11,color:msg.includes("❌")?"#dc3545":msg.includes("✅")?"#0d7c3d":"var(--acc)",marginTop:10,lineHeight:1.5}}>{msg}</div>:null;
   const tabBtn=(k,l)=><button key={k} onClick={()=>setTab(k)} style={{background:tab===k?"var(--acc)":"var(--bg2)",color:tab===k?"#fff":"var(--txt2)",border:"1px solid "+(tab===k?"var(--acc)":"var(--brd)"),borderRadius:8,padding:"7px 12px",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>;
 
@@ -1149,7 +1270,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         <button onClick={onClose} style={{background:"var(--bg2)",border:"1px solid var(--brd)",color:"var(--txt3)",width:32,height:32,borderRadius:8,fontSize:14,cursor:"pointer"}}>✕</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
-        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("tarife","📋 Tarifeler")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}
+        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("tarife","📋 Tarifeler")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}{tabBtn("evinternet","🏠 Ev İnterneti")}
       </div>
 
       {/* ── BİLGİ ── */}
@@ -1385,6 +1506,67 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
           <button onClick={savePromos} disabled={promoSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:promoSaving?.5:1}}>{promoSaving?"⏳ Kaydediliyor...":"💾 Reklamları Kaydet & Yayınla"}</button>
         </div>
         {msgBox(promoMsg)}
+      </div>)}
+
+      {/* ══ EV İNTERNETİ BELGELERİ ══ */}
+      {tab==="evinternet"&&(<div>
+        <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>🏠 Ev İnterneti Kampanya Belgeleri</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:12}}>
+            Yeni kampanya görseli, PDF fiyat listesi veya Excel tablosu yükle → Ev İnterneti sayfasında otomatik görünür.<br/>
+            <strong>JPEG/PNG/GIF:</strong> Kampanya afişi olarak gösterilir &nbsp;|&nbsp; <strong>PDF:</strong> İçerik metin olarak çıkarılır &nbsp;|&nbsp; <strong>Excel:</strong> Tablo olarak parse edilir
+          </p>
+
+          {/* Yükleme Butonu */}
+          <div style={{border:"2px dashed var(--acc)",borderRadius:12,padding:20,textAlign:"center",marginBottom:16,background:"rgba(37,59,128,.03)"}}>
+            <div style={{fontSize:28,marginBottom:8}}>📂</div>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--acc)",marginBottom:4}}>Kampanya Belgesi Yükle</div>
+            <div style={{fontSize:10,color:"var(--txt3)",marginBottom:12}}>
+              ✅ Kampanya görseli (JPG PNG GIF WebP) &nbsp;✅ Fiyat listesi (PDF) &nbsp;✅ Tarife tablosu (Excel .xlsx .xls .csv)
+            </div>
+            <input ref={eiFileRef} type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.xlsx,.xls,.csv"
+              onChange={e=>{if(e.target.files[0]){processEiFile(e.target.files[0]);e.target.value=""}}}
+              style={{display:"none"}}/>
+            <button onClick={()=>eiFileRef.current?.click()} disabled={eiProcessing||eiSaving}
+              style={{background:eiProcessing||eiSaving?"var(--bg2)":"var(--acc)",border:"none",borderRadius:10,padding:"10px 24px",color:eiProcessing||eiSaving?"var(--txt3)":"#fff",fontWeight:800,fontSize:13,cursor:eiProcessing||eiSaving?"default":"pointer",fontFamily:"inherit"}}>
+              {eiProcessing?"⏳ Dosya işleniyor...":eiSaving?"💾 Kaydediliyor...":"📎 Dosya Seç & Yükle"}
+            </button>
+          </div>
+          {msgBox(eiMsg)}
+
+          {/* Mevcut Belgeler */}
+          {eiDocs.length>0&&(
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:"var(--txt)",marginBottom:10}}>📋 Yüklü Belgeler ({eiDocs.length})</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {eiDocs.map((doc,i)=>(
+                  <div key={doc.id||i} style={{background:"#fff",borderRadius:10,border:"1px solid var(--brd)",padding:12,display:"flex",gap:12,alignItems:"center"}}>
+                    {doc.type==="image"
+                      ?<img src={`data:${doc.mimeType};base64,${doc.data}`} alt={doc.name} style={{width:60,height:40,objectFit:"cover",borderRadius:6,flexShrink:0}}/>
+                      :<div style={{width:60,height:40,borderRadius:6,background:"var(--blt)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📄</div>
+                    }
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:700,color:"var(--txt)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{doc.name}</div>
+                      <div style={{fontSize:9,color:"var(--txt3)"}}>{doc.date} · {doc.type==="image"?"Görsel":"Metin"}</div>
+                    </div>
+                    <button onClick={()=>{
+                      if(window.confirm("Bu belgeyi silmek istediğinize emin misiniz?")){
+                        const nd=eiDocs.filter((_,j)=>j!==i);
+                        saveEiDocs(nd);
+                      }
+                    }} style={{background:"none",border:"none",color:"#dc3545",fontSize:16,cursor:"pointer",flexShrink:0}}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <div style={{fontSize:9,color:"var(--txt3)",marginTop:8,textAlign:"center"}}>En fazla 6 belge saklanır. Yeni yükleme en üste eklenir.</div>
+            </div>
+          )}
+          {eiDocs.length===0&&!eiProcessing&&(
+            <div style={{textAlign:"center",padding:"20px 0",color:"var(--txt3)",fontSize:11}}>
+              Henüz belge yüklenmedi. Yukarıdaki butonu kullanarak ilk kampanya belgenizi ekleyin.
+            </div>
+          )}
+        </div>
       </div>)}
     </div>
   </div>);
