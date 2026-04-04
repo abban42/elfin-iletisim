@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     if (!targetData) return res.status(400).json({ error: 'Veri yok' });
 
     // Allowed files whitelist
-    const ALLOWED = ['public/devices.json', 'public/promos.json', 'public/chatbot_kb_extra.json', 'public/tariffs_custom.json'];
+    const ALLOWED = ['public/devices.json', 'public/promos.json', 'public/chatbot_kb_extra.json', 'public/tariffs_custom.json', 'public/evinternet_docs.json'];
     if (!ALLOWED.includes(targetFile)) return res.status(400).json({ error: 'Gecersiz dosya: ' + targetFile });
 
     const REPO = 'abban42/elfin-iletisim';
@@ -75,4 +75,5 @@ export default async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: 'Sunucu hatasi: ' + err.message });
   }
-}
+      }
+                     
