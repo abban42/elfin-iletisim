@@ -8,11 +8,12 @@ export const homeInternetData = [
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz paket"
   },
   {
     "name": "Yalın 16 Mbps",
@@ -22,11 +23,12 @@ export const homeInternetData = [
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz paket"
   },
   {
     "name": "Yalın 24 Mbps",
@@ -36,11 +38,12 @@ export const homeInternetData = [
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz paket"
   },
   {
     "name": "Yalın 35 Mbps",
@@ -50,11 +53,12 @@ export const homeInternetData = [
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz paket"
   },
   {
     "name": "Yalın 50 Mbps",
@@ -64,11 +68,12 @@ export const homeInternetData = [
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz paket"
   },
   {
     "name": "Yalın 100 Mbps",
@@ -78,185 +83,235 @@ export const homeInternetData = [
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz paket"
   },
   {
     "name": "Fiber 100 Mbps",
     "technology": "fiber",
     "downloadSpeed": 100,
-    "uploadSpeed": 100,
+    "uploadSpeed": 10,
     "monthlyPrice": 750,
     "commitment_months": 0,
     "campaign_price": 750,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz fiber paket"
   },
   {
     "name": "Fiber 200 Mbps",
     "technology": "fiber",
     "downloadSpeed": 200,
-    "uploadSpeed": 200,
+    "uploadSpeed": 20,
     "monthlyPrice": 850,
     "commitment_months": 0,
     "campaign_price": 850,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz fiber paket"
   },
   {
     "name": "Fiber 500 Mbps",
     "technology": "fiber",
     "downloadSpeed": 500,
-    "uploadSpeed": 500,
+    "uploadSpeed": 50,
     "monthlyPrice": 1050,
     "commitment_months": 0,
     "campaign_price": 1050,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz fiber paket"
   },
   {
     "name": "Fiber 1000 Mbps",
     "technology": "fiber",
     "downloadSpeed": 1000,
-    "uploadSpeed": 1000,
+    "uploadSpeed": 100,
     "monthlyPrice": 1200,
     "commitment_months": 0,
     "campaign_price": 1200,
-    "campaign_duration_months": 12,
+    "campaign_duration_months": 0,
     "extras": [
-      "limitsiz kullanım"
+      "limitsiz kullanım",
+      "taahhütsüz"
     ],
-    "note": "Taahhütsüz"
+    "note": "Taahhütsüz fiber paket"
   },
   {
-    "name": "Superbox 4.5G 300GB",
-    "technology": "superbox",
+    "name": "Yalın 24 Mbps İlk Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 24,
+    "uploadSpeed": 3,
+    "monthlyPrice": 982.99,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 1,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk ay indirimli"
+    ],
+    "note": "İlk ay 750 TL, 2. aydan itibaren 982,99 TL"
+  },
+  {
+    "name": "Yalın 35 Mbps İlk Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 35,
+    "uploadSpeed": 5,
+    "monthlyPrice": 982.99,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 1,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk ay indirimli"
+    ],
+    "note": "İlk ay 750 TL, 2. aydan itibaren 982,99 TL"
+  },
+  {
+    "name": "Yalın 50 Mbps İlk Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 50,
+    "uploadSpeed": 8,
+    "monthlyPrice": 982.99,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 1,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk ay indirimli"
+    ],
+    "note": "İlk ay 750 TL, 2. aydan itibaren 982,99 TL"
+  },
+  {
+    "name": "Yalın 100 Mbps İlk Ay Kampanya",
+    "technology": "vdsl",
     "downloadSpeed": 100,
-    "uploadSpeed": 50,
+    "uploadSpeed": 10,
+    "monthlyPrice": 982.99,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 1,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk ay indirimli"
+    ],
+    "note": "İlk ay 750 TL, 2. aydan itibaren 982,99 TL"
+  },
+  {
+    "name": "Yalın 24 Mbps İlk 3 Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 24,
+    "uploadSpeed": 3,
+    "monthlyPrice": 950,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 3,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk 3 ay indirimli"
+    ],
+    "note": "İlk 3 ay 750 TL, diğer aylar 950 TL"
+  },
+  {
+    "name": "Yalın 35 Mbps İlk 3 Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 35,
+    "uploadSpeed": 5,
+    "monthlyPrice": 950,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 3,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk 3 ay indirimli"
+    ],
+    "note": "İlk 3 ay 750 TL, diğer aylar 950 TL"
+  },
+  {
+    "name": "Yalın 50 Mbps İlk 3 Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 50,
+    "uploadSpeed": 8,
+    "monthlyPrice": 950,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 3,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk 3 ay indirimli"
+    ],
+    "note": "İlk 3 ay 750 TL, diğer aylar 950 TL"
+  },
+  {
+    "name": "Yalın 100 Mbps İlk 3 Ay Kampanya",
+    "technology": "vdsl",
+    "downloadSpeed": 100,
+    "uploadSpeed": 10,
+    "monthlyPrice": 950,
+    "commitment_months": 0,
+    "campaign_price": 750,
+    "campaign_duration_months": 3,
+    "extras": [
+      "limitsiz kullanım",
+      "ilk 3 ay indirimli"
+    ],
+    "note": "İlk 3 ay 750 TL, diğer aylar 950 TL"
+  },
+  {
+    "name": "Superbox 4.5G 300 GB",
+    "technology": "superbox",
+    "downloadSpeed": 42,
+    "uploadSpeed": 5,
     "monthlyPrice": 1000,
     "commitment_months": 12,
     "campaign_price": 1000,
     "campaign_duration_months": 12,
     "extras": [
-      "300GB aylık kota",
-      "12 ay hediye 50GB"
+      "300 GB",
+      "12 ay boyunca hediye 50 GB"
     ],
-    "note": "4.5G teknoloji, her yerde kullanılabilir"
+    "note": "12 ay boyunca aylık 50 GB hediye"
   },
   {
-    "name": "Superbox 4.5G 1TB",
+    "name": "Superbox 4.5G 1 TB",
     "technology": "superbox",
-    "downloadSpeed": 100,
-    "uploadSpeed": 50,
+    "downloadSpeed": 42,
+    "uploadSpeed": 5,
     "monthlyPrice": 1700,
     "commitment_months": 12,
     "campaign_price": 1700,
     "campaign_duration_months": 12,
     "extras": [
-      "1TB aylık kota"
+      "1 TB kotası"
     ],
-    "note": "4.5G teknoloji, her yerde kullanılabilir"
+    "note": "1 TB aylık kota"
   },
   {
-    "name": "Superbox 4.5G 2TB",
+    "name": "Superbox 4.5G 2 TB",
     "technology": "superbox",
-    "downloadSpeed": 100,
-    "uploadSpeed": 50,
+    "downloadSpeed": 42,
+    "uploadSpeed": 5,
     "monthlyPrice": 2800,
     "commitment_months": 12,
     "campaign_price": 2800,
     "campaign_duration_months": 12,
     "extras": [
-      "2TB aylık kota"
+      "2 TB kotası"
     ],
-    "note": "4.5G teknoloji, her yerde kullanılabilir"
-  },
-  {
-    "name": "5G Evinde 500GB",
-    "technology": "superbox",
-    "downloadSpeed": 1000,
-    "uploadSpeed": 100,
-    "monthlyPrice": 900,
-    "commitment_months": 12,
-    "campaign_price": 900,
-    "campaign_duration_months": 12,
-    "extras": [
-      "500GB aylık kota",
-      "lokasyon kilitli"
-    ],
-    "note": "5G teknoloji, sadece beyan edilen adreste"
-  },
-  {
-    "name": "5G Evinde 1TB",
-    "technology": "superbox",
-    "downloadSpeed": 1000,
-    "uploadSpeed": 100,
-    "monthlyPrice": 1200,
-    "commitment_months": 12,
-    "campaign_price": 1200,
-    "campaign_duration_months": 12,
-    "extras": [
-      "1TB aylık kota",
-      "lokasyon kilitli"
-    ],
-    "note": "5G teknoloji, sadece beyan edilen adreste"
-  },
-  {
-    "name": "5G Evinde 2TB",
-    "technology": "superbox",
-    "downloadSpeed": 1000,
-    "uploadSpeed": 100,
-    "monthlyPrice": 1500,
-    "commitment_months": 12,
-    "campaign_price": 1500,
-    "campaign_duration_months": 12,
-    "extras": [
-      "2TB aylık kota",
-      "lokasyon kilitli"
-    ],
-    "note": "5G teknoloji, sadece beyan edilen adreste"
-  },
-  {
-    "name": "5G Yanında 150GB",
-    "technology": "superbox",
-    "downloadSpeed": 1000,
-    "uploadSpeed": 100,
-    "monthlyPrice": 1000,
-    "commitment_months": 12,
-    "campaign_price": 1000,
-    "campaign_duration_months": 12,
-    "extras": [
-      "150GB aylık kota",
-      "her yerde kullanım"
-    ],
-    "note": "5G teknoloji, mobil kullanım"
-  },
-  {
-    "name": "5G Yanında 250GB",
-    "technology": "superbox",
-    "downloadSpeed": 1000,
-    "uploadSpeed": 100,
-    "monthlyPrice": 1250,
-    "commitment_months": 12,
-    "campaign_price": 1250,
-    "campaign_duration_months": 12,
-    "extras": [
-      "250GB aylık kota",
-      "her yerde kullanım"
-    ],
-    "note": "5G teknoloji, mobil kullanım"
+    "note": "2 TB aylık kota"
   }
 ];
-export const lastUpdated = "2026-04-08T13:48:44.491Z";
+export const lastUpdated = "2026-04-08T13:57:03.187Z";
