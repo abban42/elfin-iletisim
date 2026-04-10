@@ -462,7 +462,7 @@ function DevicePage({data,title,sub,isAksesuar,backRef}){
 function Badge5G(){return <span style={{background:"linear-gradient(135deg,#0d7c3d,#15a050)",color:"#fff",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:4,letterSpacing:.3}}>5G</span>}
 
 function DeviceCard({d,i,onClick,isAksesuar}){
-  const vt=getVTaksit(d,isAksesuar);const best=vt.length?vt.reduce((a,b)=>a.vade>b.vade?a:b):null;const f5=is5G(d.model);const over30=d.pesin>30000&&!isAksesuar;
+  const vt=getVTaksit(d,isAksesuar);const best=vt.length?vt.reduce((a,b)=>a.vade>b.vade?a:b):null;const f5=is5G(d.model);
   return(
     <div className="ac" onClick={onClick} style={{background:"#fff",borderRadius:12,padding:16,border:"1px solid var(--brd)",cursor:"pointer",animationDelay:`${Math.min(i*.03,.35)}s`,animationFillMode:"both",transition:"all .2s",boxShadow:"var(--sh)",position:"relative",overflow:"hidden"}}
       onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(37,59,128,.1)"}}
@@ -472,21 +472,21 @@ function DeviceCard({d,i,onClick,isAksesuar}){
       <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}>
         <span style={{fontSize:9,color:"var(--acc)",fontWeight:700,textTransform:"uppercase",letterSpacing:1}}>{d.marka}</span>
         {f5&&<Badge5G/>}
-        {over30&&<span style={{fontSize:7,color:"var(--acc)",background:"var(--blt)",padding:"1px 5px",borderRadius:3,fontWeight:600}}>Kurumsal Taksit</span>}
+
       </div>
       <h3 style={{fontSize:13,fontWeight:800,color:"var(--txt)",marginBottom:8,lineHeight:1.2}}>{d.model}</h3>
       <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>
         <Chip label="Peşin" value={`₺${fmt(d.pesinIndirimli||d.pesin)}`} accent/>
         {best&&<Chip label={`${best.vade} Ay`} value={`₺${fmt(Math.round(best.aylik))}/ay`}/>}
       </div>
-      {vt.length>0&&<div style={{fontSize:8,color:"var(--txt3)"}}>{vt.map(t=>`${t.vade}ay`).join(" • ")} taksit{over30?" (Kurumsal)":""}</div>}
+      {vt.length>0&&<div style={{fontSize:8,color:"var(--txt3)"}}>{vt.map(t=>`${t.vade}ay`).join(" • ")} taksit</div>}
     </div>
   );
 }
 function Chip({label,value,accent}){return(<div style={{background:accent?"rgba(255,199,44,.1)":"var(--bg2)",borderRadius:6,padding:"4px 7px",textAlign:"center"}}><div style={{fontSize:7,color:"var(--txt3)",fontWeight:600,textTransform:"uppercase",letterSpacing:.3}}>{label}</div><div style={{fontSize:11,fontWeight:800,color:accent?"var(--tcD)":"var(--txt)"}}>{value}</div></div>)}
 
 function DeviceDetail({d,isAksesuar}){
-  const vt=getVTaksit(d,isAksesuar);const f5=is5G(d.model);const over30=d.pesin>30000&&!isAksesuar;
+  const vt=getVTaksit(d,isAksesuar);const f5=is5G(d.model);
   return(
     <div className="au" style={{background:"#fff",borderRadius:16,padding:22,border:"1px solid var(--brd)",boxShadow:"0 4px 20px rgba(37,59,128,.07)",animation:"glow 3s ease-in-out infinite"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10,marginBottom:16}}>
@@ -503,7 +503,7 @@ function DeviceDetail({d,isAksesuar}){
           {d.pesinIndirimli&&d.pesinIndirimli<d.pesin&&<div style={{fontSize:10,color:"var(--txt3)",textDecoration:"line-through"}}>₺{fmt(d.pesin)}</div>}
         </div>
       </div>
-      {over30&&<div style={{background:"var(--blt)",borderRadius:8,padding:"8px 12px",marginBottom:14,fontSize:11,color:"var(--acc)",fontWeight:600}}>ℹ️ 30.000 TL üzeri cihazlarda 3 aydan fazla taksit seçeneği yalnızca kurumsal müşterilere sunulmaktadır.</div>}
+
       {vt.length>0&&(
         <div className="detail-grid" style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(vt.length,4)},1fr)`,gap:8,marginBottom:16}}>
           {vt.map(t=>{const fark=t.toplam-d.pesin;return(
@@ -1986,4 +1986,3 @@ function ChatFullPage(){
 }
 
 function Empty(){return <div style={{textAlign:"center",padding:"36px 16px",color:"var(--txt3)"}}><div style={{fontSize:32,opacity:.3,marginBottom:8}}>🔍</div><p style={{fontSize:12}}>Kriterlere uygun sonuç bulunamadı.</p></div>}
-
