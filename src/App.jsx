@@ -97,6 +97,7 @@ export default function App(){
   const[chatbotExtra,setChatbotExtra]=useState("");
   const[dynPromos,setDynPromos]=useState(null);
   const[evInternetDocs,setEvInternetDocs]=useState([]);
+  const[evInternetTariffs,setEvInternetTariffs]=useState(null);
 
   // Try loading fresh data from devices.json, promos.json, chatbot_kb_extra.json
   useEffect(()=>{
@@ -122,6 +123,10 @@ export default function App(){
 
     fetch("/evinternet_docs.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&Array.isArray(d.docs)){setEvInternetDocs(d.docs);console.log("[Elfin] evinternet_docs.json yüklendi:",d.docs.length,"belge")}
+    }).catch(()=>{});
+
+    fetch("/evinternet_tariffs.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&d.kategoriler&&d.kategoriler.length>0){setEvInternetTariffs(d.kategoriler);console.log("[Elfin] evinternet_tariffs.json yüklendi:",d.kategoriler.length,"kategori")}
     }).catch(()=>{});
   },[]);
 
@@ -188,7 +193,7 @@ export default function App(){
       <ChatBot />
 
       {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onLogin={u=>{setUser(u);setShowAuth(false)}} />}
-      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} onClose={()=>setShowAdmin(false)} />}
+      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} evInternetTariffs={evInternetTariffs} setEvInternetTariffs={setEvInternetTariffs} onClose={()=>setShowAdmin(false)} />}
 
       <main style={{maxWidth:1440,margin:"0 auto",padding:"0 20px"}}>
         {page==="home"&&<Home onNav={navigate} devices={devices}/>}
@@ -197,7 +202,7 @@ export default function App(){
         {page==="notebook"&&<DevicePage data={devices.notebook} title="Notebooklar" sub={`${devices.notebook.length} model`} backRef={backRef}/>}
         {page==="aksesuar"&&<DevicePage data={devices.aksesuar} title="Aksesuarlar" sub={`${devices.aksesuar.length} ürün`} isAksesuar={true} backRef={backRef}/>}
         {page==="tariff"&&<TariffPage tariffs={tariffs}/>}
-        {page==="internet"&&<EvInternetiPage evInternetDocs={evInternetDocs}/>}
+        {page==="internet"&&<EvInternetiPage evInternetDocs={evInternetDocs} evInternetTariffs={evInternetTariffs}/>}
         {page==="contact"&&<Contact/>}
       </main>
 
@@ -612,8 +617,8 @@ function BarStat({label,value,pct,color}){return(<div style={{background:"var(--
 
 /* ═══ CONTACT ═══ */
 /* ═══ EV İNTERNETİ PAGE ═══ */
-function EvInternetiPage({evInternetDocs=[]}){
-  const[tab,setTab]=useState("fiber");
+function EvInternetiPage({evInternetDocs=[],evInternetTariffs=null}){
+  const[tab,setTab]=useState(null);
   const[selectedPlan,setSelectedPlan]=useState(null);
   const fiberPlans=[
     {ad:"Fiber ile Hız Şöleni",taah:"12 Ay",paketler:[{hiz:"100 Mbps",fiyat:800,upload:"20 Mbps"},{hiz:"200 Mbps",fiyat:900,upload:"20 Mbps"},{hiz:"1000 Mbps",fiyat:1000,upload:"50 Mbps"}],cayma:2500,not:"12 ay sabit fiyat"},
@@ -637,8 +642,17 @@ function EvInternetiPage({evInternetDocs=[]}){
     {ad:"Superbox Tak Çalıştır",taah:"12 Ay",paketler:[{hiz:"200 GB",fiyat:795,tip:"4.5G Cat6"},{hiz:"300 GB",fiyat:1000,tip:"4.5G Cat12"},{hiz:"1 TB",fiyat:1700,tip:"4.5G Cat12"},{hiz:"2 TB",fiyat:2800,tip:"4.5G Cat12"}],not:"Kurulum gerektirmez"},
     {ad:"Superbox 5G Tak Çalıştır",taah:"12 Ay",paketler:[{hiz:"250 GB",fiyat:1100,tip:"5G"},{hiz:"500 GB",fiyat:1350,tip:"5G"},{hiz:"1 TB",fiyat:1850,tip:"5G"}],not:"5G, modem dahil (856 TL/ay)"},
   ];
-  const tabs=[{k:"fiber",l:"🌐 Fiber",d:fiberPlans},{k:"ultra",l:"⚡ Ultra Fiber",d:ultraPlans},{k:"tv",l:"📺 TV+ Paketler",d:tvPlans},{k:"superbox",l:"📡 Superbox",d:superboxPlans}];
-  const current=tabs.find(t=>t.k===tab);
+  const defaultTabs=[{k:"fiber",l:"🌐 Fiber",d:fiberPlans},{k:"ultra",l:"⚡ Ultra Fiber",d:ultraPlans},{k:"tv",l:"📺 TV+ Paketler",d:tvPlans},{k:"superbox",l:"📡 Superbox",d:superboxPlans}];
+
+  // Dinamik veri varsa onu kullan
+  const tabIcons={"fiber":"🌐","ultra fiber":"⚡","tv":"📺","tv+":"📺","superbox 4.5g":"📡","superbox 5g":"🚀","superbox":"📡","adsl":"🔌","adsl/vdsl":"🔌","vdsl":"🔌"};
+  const dynTabs=evInternetTariffs?evInternetTariffs.map(kat=>{
+    const kl=kat.kategori.toLowerCase();
+    return{k:kl.replace(/[^a-z0-9]/g,""),l:(tabIcons[kl]||"📋")+" "+kat.kategori,d:kat.kampanyalar||[]};
+  }):null;
+  const tabs=dynTabs||defaultTabs;
+  const activeTab=tab||tabs[0]?.k;
+  const current=tabs.find(t=>t.k===activeTab)||tabs[0];
   return(
     <div className="au" style={{paddingTop:28}}>
       <div style={{textAlign:"center",marginBottom:18}}><h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(20px,3.5vw,30px)",fontWeight:800,color:"var(--acc)",marginBottom:4}}>Ev İnterneti</h2><p style={{fontSize:12,color:"var(--txt2)"}}>Fiber, Superbox, TV+ — Evinize özel çözümler</p></div>
@@ -674,7 +688,7 @@ function EvInternetiPage({evInternetDocs=[]}){
         </div>
       )}
       <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
-        {tabs.map(t=>(<button key={t.k} onClick={()=>{setTab(t.k);setSelectedPlan(null)}} style={{background:tab===t.k?"var(--acc)":"#fff",color:tab===t.k?"#fff":"var(--txt2)",border:tab===t.k?"none":"1px solid var(--brd)",borderRadius:10,padding:"9px 18px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:tab===t.k?"0 4px 10px rgba(37,59,128,.18)":"var(--sh)"}}>{t.l}</button>))}
+        {tabs.map(t=>(<button key={t.k} onClick={()=>{setTab(t.k);setSelectedPlan(null)}} style={{background:activeTab===t.k?"var(--acc)":"#fff",color:activeTab===t.k?"#fff":"var(--txt2)",border:activeTab===t.k?"none":"1px solid var(--brd)",borderRadius:10,padding:"9px 18px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:activeTab===t.k?"0 4px 10px rgba(37,59,128,.18)":"var(--sh)"}}>{t.l}</button>))}
       </div>
       <div style={{background:"var(--blt)",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:11,color:"var(--acc)",textAlign:"center",fontWeight:600}}>📞 Altyapı sorgulama ve başvuru için: 0532 682 22 77 — Konya içi aynı gün kurulum!</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
@@ -770,7 +784,7 @@ function AuthModal({onClose,onLogin}){
 }
 
 /* ═══ ADMIN PANEL ═══ */
-function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotExtra,setChatbotExtra,evInternetDocs,setEvInternetDocs,onClose}){
+function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotExtra,setChatbotExtra,evInternetDocs,setEvInternetDocs,evInternetTariffs,setEvInternetTariffs,onClose}){
   const[tab,setTab]=useState("info");
   const phoneRef=useRef(null);
   const[uploadMsg,setUploadMsg]=useState("");
@@ -782,6 +796,12 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const[eiProcessing,setEiProcessing]=useState(false);
   const[eiSaving,setEiSaving]=useState(false);
   const eiFileRef=useRef(null);
+  // Ev İnterneti Tarife Excel state
+  const eiTariffRef=useRef(null);
+  const[eiTariffMsg,setEiTariffMsg]=useState("");
+  const[eiTariffProcessing,setEiTariffProcessing]=useState(false);
+  const[eiTariffSaving,setEiTariffSaving]=useState(false);
+  const[eiTariffPreview,setEiTariffPreview]=useState(null);
   // Chatbot state
   const[kbText,setKbText]=useState(chatbotExtra||"");
   const[kbMsg,setKbMsg]=useState("");
@@ -1156,6 +1176,88 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const deletePromo=(i)=>{if(window.confirm("Bu reklamı silmek istediğinize emin misiniz?"))setPromos(promos.filter((_,j)=>j!==i))};
   const movePromo=(i,dir)=>{const np=[...promos];const t=np[i];np[i]=np[i+dir];np[i+dir]=t;setPromos(np)};
 
+  /* ── Ev İnterneti Excel İşleme ── */
+  const processEiTariffExcel=async(file)=>{
+    setEiTariffProcessing(true);setEiTariffPreview(null);setEiTariffMsg("Excel okunuyor...");
+    try{
+      const XLSX=await loadXLSX();
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf);
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      // Header bul
+      let hi=-1;
+      for(let i=0;i<Math.min(6,rows.length);i++){
+        const rs=rows[i].join(" ").toLowerCase();
+        if(rs.includes("kategori")||rs.includes("kampanya")||rs.includes("fiyat")){hi=i;break}
+      }
+      if(hi<0){setEiTariffMsg("❌ Header satırı bulunamadı. Kategori/Kampanya/Fiyat sütunları olmalı.");setEiTariffProcessing(false);return}
+      const headers=rows[hi].map(h=>String(h).toLowerCase().trim());
+      const fc=(keys)=>headers.findIndex(h=>keys.some(k=>h.includes(k)));
+      const catCol=fc(["kategori","grup","tip"]);
+      const nameCol=fc(["kampanya","paket","plan","ad"]);
+      const taahCol=fc(["taahhüt","taahhut","süre","sure"]);
+      const hizCol=fc(["hız","hiz","kota","mbps"]);
+      const fiyatCol=fc(["fiyat","ücret","ucret"]);
+      const fiyat2Col=fc(["fiyat2","son fiyat","ikinci"]);
+      const uploadCol=fc(["upload","yükleme"]);
+      const tipCol=headers.findIndex(h=>h==="tip"||h==="teknoloji");
+      const caymaCol=fc(["cayma","karşılama","karsilama"]);
+      const notCol=fc(["not","açıklama","aciklama"]);
+      if(catCol<0||hizCol<0||fiyatCol<0){setEiTariffMsg("❌ Kategori, Hız/Kota ve Fiyat sütunları zorunlu.");setEiTariffProcessing(false);return}
+      // Parse
+      const kategoriler={};
+      for(let i=hi+1;i<rows.length;i++){
+        const r=rows[i];
+        const cat=String(r[catCol]||"").trim();
+        const hiz=String(r[hizCol]||"").trim();
+        const fiyat=parseFloat(r[fiyatCol])||0;
+        if(!cat||!hiz||!fiyat)continue;
+        const kampAd=nameCol>=0?String(r[nameCol]||"").trim():"Genel";
+        const taah=taahCol>=0?String(r[taahCol]||"").trim():"";
+        const fiyat2=fiyat2Col>=0?(parseFloat(r[fiyat2Col])||null):null;
+        const upload=uploadCol>=0?String(r[uploadCol]||"").trim():"";
+        const tip=tipCol>=0?String(r[tipCol]||"").trim():"";
+        const cayma=caymaCol>=0?(parseFloat(r[caymaCol])||null):null;
+        const not_=notCol>=0?String(r[notCol]||"").trim():"";
+        if(!kategoriler[cat])kategoriler[cat]={kategori:cat,kampanyalar:{}};
+        if(!kategoriler[cat].kampanyalar[kampAd])kategoriler[cat].kampanyalar[kampAd]={ad:kampAd,taah:taah,paketler:[],cayma:cayma,not:not_};
+        const paket={hiz};
+        if(fiyat)paket.fiyat=fiyat;
+        if(fiyat2)paket.fiyat2=fiyat2;
+        if(upload)paket.upload=upload;
+        if(tip)paket.tip=tip;
+        kategoriler[cat].kampanyalar[kampAd].paketler.push(paket);
+        if(cayma&&!kategoriler[cat].kampanyalar[kampAd].cayma)kategoriler[cat].kampanyalar[kampAd].cayma=cayma;
+        if(not_&&!kategoriler[cat].kampanyalar[kampAd].not)kategoriler[cat].kampanyalar[kampAd].not=not_;
+        if(taah&&!kategoriler[cat].kampanyalar[kampAd].taah)kategoriler[cat].kampanyalar[kampAd].taah=taah;
+      }
+      const result=Object.values(kategoriler).map(kat=>({kategori:kat.kategori,kampanyalar:Object.values(kat.kampanyalar)}));
+      if(result.length===0){setEiTariffMsg("❌ Hiç tarife bulunamadı.");setEiTariffProcessing(false);return}
+      const totalPlan=result.reduce((s,k)=>s+k.kampanyalar.length,0);
+      const totalPaket=result.reduce((s,k)=>s+k.kampanyalar.reduce((s2,kp)=>s2+kp.paketler.length,0),0);
+      setEiTariffPreview(result);
+      setEiTariffMsg(`✅ ${result.length} kategori, ${totalPlan} kampanya, ${totalPaket} paket okundu. Önizleyip "Kaydet" butonuna basın.`);
+    }catch(e){setEiTariffMsg("❌ Excel okuma hatası: "+e.message)}
+    setEiTariffProcessing(false);
+  };
+
+  const saveEiTariffs=async()=>{
+    if(!eiTariffPreview)return;
+    setEiTariffSaving(true);setEiTariffMsg("Kaydediliyor...");
+    try{
+      const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        password:"elfin2026",file:"public/evinternet_tariffs.json",
+        data:{kategoriler:eiTariffPreview,_updated:new Date().toISOString()},
+        message:"Ev interneti tarife guncelleme - "+eiTariffPreview.length+" kategori - "+new Date().toLocaleDateString("tr-TR")
+      })});
+      const d=await res.json();
+      if(d.success){setEiTariffMsg("✅ Ev interneti tarifeleri kaydedildi! ~30sn içinde sitede görünecek.");setEvInternetTariffs(eiTariffPreview)}
+      else{setEiTariffMsg("❌ "+d.error)}
+    }catch(e){setEiTariffMsg("❌ "+e.message)}
+    setEiTariffSaving(false);
+  };
+
   /* ── Ev İnterneti Belge Yükle ── */
   const saveEiDocs=async(newDocs)=>{
     setEiSaving(true);setEiMsg("Kaydediliyor...");
@@ -1490,6 +1592,45 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
 
       {/* ══ EV İNTERNETİ BELGELERİ ══ */}
       {tab==="evinternet"&&(<div>
+        {/* ── Tarife Excel Yükleme ── */}
+        <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>📊 Ev İnterneti Tarifeleri (Excel)</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>
+            Excel şablonunu doldurup yükleyin → Sitedeki ev interneti tarifeleri otomatik güncellenir.<br/>
+            <strong>Sütunlar:</strong> Kategori | Kampanya Adı | Taahhüt | Hız/Kota | Fiyat | Fiyat2 | Upload | Tip | Cayma | Not
+          </p>
+          <input ref={eiTariffRef} type="file" accept=".xlsx,.xls,.csv" onChange={e=>{if(e.target.files[0]){processEiTariffExcel(e.target.files[0]);e.target.value=""}}} style={{display:"none"}}/>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
+            <button onClick={()=>eiTariffRef.current?.click()} disabled={eiTariffProcessing} style={{background:"#0d7c3d",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:eiTariffProcessing?.5:1}}>{eiTariffProcessing?"⏳ İşleniyor...":"📊 Excel Yükle"}</button>
+            {eiTariffPreview&&<button onClick={saveEiTariffs} disabled={eiTariffSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:eiTariffSaving?.5:1}}>{eiTariffSaving?"⏳ Kaydediliyor...":"🚀 Kaydet & Yayınla"}</button>}
+          </div>
+          {msgBox(eiTariffMsg)}
+          {/* Önizleme */}
+          {eiTariffPreview&&<div style={{marginTop:10,maxHeight:350,overflowY:"auto"}}>
+            {eiTariffPreview.map((kat,ki)=>(
+              <div key={ki} style={{marginBottom:10}}>
+                <div style={{background:"var(--acc)",color:"#fff",padding:"6px 12px",borderRadius:"8px 8px 0 0",fontSize:12,fontWeight:700}}>{kat.kategori} — {kat.kampanyalar.length} kampanya</div>
+                <div style={{background:"#fff",border:"1px solid var(--brd)",borderRadius:"0 0 8px 8px",padding:8}}>
+                  {kat.kampanyalar.map((kp,kpi)=>(
+                    <div key={kpi} style={{marginBottom:6}}>
+                      <div style={{fontSize:11,fontWeight:700,color:"var(--txt)"}}>{kp.ad} <span style={{fontWeight:400,color:"var(--txt3)",fontSize:9}}>({kp.taah||"—"})</span></div>
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:3}}>
+                        {kp.paketler.map((p,pi)=>(
+                          <span key={pi} style={{background:"var(--blt)",borderRadius:5,padding:"2px 8px",fontSize:9,color:"var(--txt2)"}}>{p.hiz}: <strong style={{color:"#0d7c3d"}}>{fmt(p.fiyat)} TL</strong>{p.fiyat2?` / ${fmt(p.fiyat2)} TL`:""}{p.tip?` (${p.tip})`:""}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>}
+          <div style={{fontSize:9,color:"var(--txt3)",marginTop:8,lineHeight:1.5}}>
+            <strong>Mevcut:</strong> {evInternetTariffs?evInternetTariffs.length+" kategori aktif":"Varsayılan (kod içi) veriler kullanılıyor"}
+          </div>
+        </div>
+
+        {/* ── Kampanya Belgeleri ── */}
         <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
           <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>🏠 Ev İnterneti Kampanya Belgeleri</h3>
           <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:12}}>
