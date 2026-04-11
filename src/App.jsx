@@ -343,8 +343,10 @@ function PromoCarousel({onNav,dynPromos}){
     {title:"⚡ 1 Nisan'da 5G!",sub:"5G Uyumlu Cihazlar Hazır",desc:"Galaxy S25-S26 • iPhone 15-17 • Vivo Y29S • Samsung A17 5G",color:"#0d7c3d",action:"phone"},
   ];
   const promos=(dynPromos&&dynPromos.length>0)?dynPromos:defaultPromos;
-  useEffect(()=>{const t=setInterval(()=>setIdx(i=>(i+1)%promos.length),4000);return()=>clearInterval(t)},[]);
-  const p=promos[idx];
+  useEffect(()=>{const t=setInterval(()=>setIdx(i=>(i+1)%promos.length),4000);return()=>clearInterval(t)},[promos.length]);
+  useEffect(()=>{if(idx>=promos.length)setIdx(0)},[promos.length]);
+  const p=promos[idx%promos.length]||promos[0];
+  if(!p)return null;
   const hasImg=p.imageUrl&&p.imageUrl.trim();
   return(
     <div style={{position:"relative",overflow:"hidden"}}>
