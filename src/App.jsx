@@ -1704,7 +1704,7 @@ function ChatBotSystem({fullPage=false, onClose}){
   const[speaking,setSpeaking]=useState(false);
   const[extraKB,setExtraKB]=useState("");
   const[attachedFile,setAttachedFile]=useState(null);
-  const[siteData,setSiteData]=useState({tariffs:null,devices:null,eiDocs:null});
+  const[siteData,setSiteData]=useState({tariffs:null,devices:null,eiDocs:null,eiTariffs:null});
   const[conflictWarnings,setConflictWarnings]=useState([]);
   const chatRef=useRef(null);
   const inputRef=useRef(null);
@@ -1731,6 +1731,10 @@ function ChatBotSystem({fullPage=false, onClose}){
     fetch("/evinternet_docs.json?t="+t).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&Array.isArray(d.docs))setSiteData(s=>({...s,eiDocs:d.docs}));
     }).catch(()=>{});
+    // Ev interneti tarifeleri
+    fetch("/evinternet_tariffs.json?t="+t).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&d.kategoriler&&d.kategoriler.length>0)setSiteData(s=>({...s,eiTariffs:d.kategoriler}));
+    }).catch(()=>{});
   },[]);
 
   // Cihazları özet olarak hazırla (token tasarrufu için sadece isim+fiyat)
@@ -1749,10 +1753,30 @@ function ChatBotSystem({fullPage=false, onClose}){
   };
 
   const buildEiSummary=()=>{
-    if(!siteData.eiDocs||!siteData.eiDocs.length)return "";
-    return "\n\n--- GÜNCEL EV İNTERNETİ BELGELERİ (admin panelinden) ---\n"+
-      siteData.eiDocs.map(d=>d.type==="text"?`[${d.name} - ${d.date}]\n${d.content||""}`:
-        `[${d.name} - ${d.date}] (görsel kampanya belgesi)`).join("\n\n")+"\n---";
+    let parts=[];
+    if(siteData.eiTariffs&&siteData.eiTariffs.length>0){
+      parts.push("--- GÜNCEL EV İNTERNETİ TARİFELERİ (siteden canlı) ---");
+      siteData.eiTariffs.forEach(kat=>{
+        parts.push(`\n[${kat.kategori}]`);
+        (kat.tarifeler||[]).forEach(t=>{
+          let line=`  • ${t.kampanya}: ${t.hiz}`;
+          if(t.fiyat)line+=` → ${t.fiyat} TL/ay`;
+          if(t.fiyat2)line+=` (sonra ${t.fiyat2} TL/ay)`;
+          if(t.taahhut)line+=` | ${t.taahhut}`;
+          if(t.not)line+=` | ${t.not}`;
+          parts.push(line);
+        });
+      });
+      parts.push("---");
+    }
+    if(siteData.eiDocs&&siteData.eiDocs.length>0){
+      parts.push("--- GÜNCEL EV İNTERNETİ BELGELERİ (admin panelinden) ---");
+      siteData.eiDocs.forEach(d=>{
+        parts.push(d.type==="text"?`[${d.name} - ${d.date}]\n${d.content||""}`:`[${d.name} - ${d.date}] (görsel kampanya belgesi)`);
+      });
+      parts.push("---");
+    }
+    return parts.length>0?"\n\n"+parts.join("\n"):"";
   };
 
   const systemPrompt=`${CHATBOT_KB}
