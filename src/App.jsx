@@ -1738,10 +1738,20 @@ function ChatBotSystem({fullPage=false, onClose}){
   },[]);
 
   // Cihazları özet olarak hazırla (token tasarrufu için sadece isim+fiyat)
-  const buildDeviceSummary=()=>{
+ buildDeviceSummary=()=>{
     if(!siteData.devices)return "";
-    const fmt=(arr,tip)=>(arr||[]).slice(0,60).map(d=>`${d.m} ${d.n}: ${d.p} TL peşin`).join("\n");
-    return `\n\n--- GÜNCEL CİHAZ FİYATLARI (siteden canlı) ---\nTELEFONLAR:\n${fmt(siteData.devices.telefon,"tel")}\n\nTABLETLER:\n${fmt(siteData.devices.tablet,"tab")}\n\nNOTEBOOKLAR:\n${fmt(siteData.devices.notebook,"nb")}\n---`;
+    const fmt=(arr)=>{
+      if(!arr||arr.length===0)return "Yok";
+      const markalar={};
+      arr.forEach(d=>{
+        if(!markalar[d.m])markalar[d.m]=[];
+        markalar[d.m].push(d.n+": "+d.p?.toLocaleString('tr-TR')+" TL");
+      });
+      return Object.entries(markalar).map(([m,liste])=>
+        m+" ("+liste.length+" model): "+liste.join(", ")
+      ).join("\n");
+    };
+    return `\n\n--- GÜNCEL CİHAZ FİYATLARI (siteden canlı) ---\nTELEFONLAR:\n${fmt(siteData.devices.telefon)}\n\nTABLETLER:\n${fmt(siteData.devices.tablet)}\n\nNOTEBOOKLAR:\n${fmt(siteData.devices.notebook)}\n---`;
   };
 
   const buildTariffSummary=()=>{
