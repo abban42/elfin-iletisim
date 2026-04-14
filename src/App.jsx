@@ -1945,7 +1945,7 @@ Bu etiketi sadece gerçek çelişkilerde kullan, her mesajda ekleme.${buildTarif
   /* ── AI REPLY ── */
   const aiReply=async(allMsgs)=>{
     const apiMsgs=allMsgs.filter(m=>m.role!=="system").map(m=>({role:m.role,content:m.content})).slice(-12);
-    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:apiMsgs,system:systemPrompt})});
+    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:apiMsgs,system: getSystemPrompt()})});
     if(!res.ok)throw new Error("API error");
     const data=await res.json();if(data.error)throw new Error(data.error);
     return data.reply;
