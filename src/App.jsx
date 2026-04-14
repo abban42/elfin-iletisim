@@ -1739,6 +1739,8 @@ function ChatBotSystem({fullPage=false, onClose}){
 
   // Cihazları özet olarak hazırla (token tasarrufu için sadece isim+fiyat)
  buildDeviceSummary=()=>{
+   console.log("[DEBUG] siteData.devices:", siteData.devices ? "VAR - " + siteData.devices.telefon?.length + " tel" : "YOK");
+    if(!siteData.devices)return "";
     if(!siteData.devices)return "";
     const fmt=(arr)=>{
       if(!arr||arr.length===0)return "Yok";
