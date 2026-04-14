@@ -1763,7 +1763,7 @@ function ChatBotSystem({fullPage=false, onClose}){
       ).join("\n")+"\n---";
   };
 
-  const buildEiSummary=()=>{
+  buildEiSummary=()=>{
     let parts=[];
     if(siteData.eiTariffs&&siteData.eiTariffs.length>0){
       parts.push("--- GÜNCEL EV İNTERNETİ TARİFELERİ (siteden canlı) ---");
