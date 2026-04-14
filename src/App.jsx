@@ -1737,7 +1737,7 @@ function ChatBotSystem({fullPage=false, onClose}){
   },[]);
 
   // Cihazları özet olarak hazırla (token tasarrufu için sadece isim+fiyat)
- const buildDeviceSummary=()=>{
+  buildDeviceSummary=()=>{
    console.log("[DEBUG] siteData.devices:", siteData.devices ? "VAR - " + siteData.devices.telefon?.length + " tel" : "YOK");
     if(!siteData.devices)return "";
     if(!siteData.devices)return "";
@@ -1755,7 +1755,7 @@ function ChatBotSystem({fullPage=false, onClose}){
     return `\n\n--- GÜNCEL CİHAZ FİYATLARI (siteden canlı) ---\nTELEFONLAR:\n${fmt(siteData.devices.telefon)}\n\nTABLETLER:\n${fmt(siteData.devices.tablet)}\n\nNOTEBOOKLAR:\n${fmt(siteData.devices.notebook)}\n---`;
   };
 
-  const buildTariffSummary=()=>{
+  buildTariffSummary=()=>{
     if(!siteData.tariffs)return "";
     return "\n\n--- GÜNCEL TARİFELER (admin panelinden güncel) ---\n"+
       siteData.tariffs.map(kat=>`\n[${kat.ad}] ${kat.sure} | ${kat.aciklama||""}\n`+
