@@ -1,0 +1,99 @@
+// api/market-prices.js — Vercel Serverless Function (CommonJS uyumlu)
+// yigitech.com/liste/ sayfasından güncel piyasa fiyatlarını çeker
+let cache = null, cacheTime = 0;
+const CACHE_TTL = 30 * 60 * 1000;
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  if (cache && Date.now() - cacheTime < CACHE_TTL)
+    return res.json(cache);
+
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 12000);
+    const response = await fetch('https://yigitech.com/liste/', {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'tr-TR,tr;q=0.9',
+      },
+    });
+    clearTimeout(tid);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+
+    const html = await response.text();
+    const items = parseYigitech(html);
+    if (!items.length) throw new Error('Ürün bulunamadı');
+
+    cache = { items, updated: new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}), count: items.length };
+    cacheTime = Date.now();
+    return res.json(cache);
+  } catch (err) {
+    console.error('[market-prices]', err.message);
+    if (cache) return res.json({ ...cache, stale: true });
+    return res.json({ items: [], updated: '-', count: 0, error: err.message });
+  }
+};
+
+function parseYigitech(html) {
+  const items = [];
+  // Tablo satırlarını tara
+  const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let row;
+  while ((row = rowRe.exec(html)) !== null) {
+    if (/<th/i.test(row[0])) continue;
+    const cells = [];
+    const cellRe = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+    let cell;
+    while ((cell = cellRe.exec(row[0])) !== null)
+      cells.push(strip(cell[1]));
+    if (cells.length < 2) continue;
+    const parsed = parseModel(cells[0]);
+    if (!parsed) continue;
+    const p1 = parsePrice(cells[1]);
+    const p2 = cells[2] ? parsePrice(cells[2]) : p1;
+    if (p1 < 1500) continue;
+    items.push({ brand: parsed.brand, model: parsed.model, category: parsed.cat, priceNakit: p1, priceKart: p2 || p1, price: p1 });
+  }
+
+  // Fallback: regex
+  if (!items.length) {
+    const re = /([A-ZÇĞİÖŞa-zçğışöşü0-9 ]{5,50})\s+([\d\.]{4,8})\s*(?:TL|₺)/g;
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      const parsed = parseModel(m[1].trim());
+      const price = parsePrice(m[2]);
+      if (!parsed || price < 1500) continue;
+      items.push({ brand: parsed.brand, model: parsed.model, category: parsed.cat, priceNakit: price, priceKart: price, price });
+    }
+  }
+
+  const seen = new Set();
+  return items.filter(i => { const k = i.brand+'|'+i.model; if(seen.has(k))return false; seen.add(k); return true; }).slice(0,500);
+}
+
+function parseModel(raw) {
+  if (!raw || raw.length < 3) return null;
+  const s = raw.replace(/\s+/g,' ').trim().toUpperCase();
+  const BRANDS = ['APPLE','SAMSUNG','XIAOMI','HUAWEI','OPPO','VIVO','REALME','NOKIA','GOOGLE','SONY','ONEPLUS','ASUS','LENOVO','CASPER','GENERAL MOBILE','TECNO','INFINIX','NUBIA','OMIX','TCL','PHILIPS'];
+  let brand = '', rest = s;
+  for (const b of BRANDS) { if (s.startsWith(b+' ')||s===b) { brand=b; rest=s.slice(b.length).trim(); break; } }
+  if (!brand) { const sp=s.indexOf(' '); if(sp<2)return null; brand=s.slice(0,sp); rest=s.slice(sp+1).trim(); }
+  if (!rest) return null;
+  let cat = 'Telefon';
+  if (/\bIPAD\b|\bTABLET\b|\bTAB /.test(s)) cat='Tablet';
+  else if (/MACBOOK|NOTEBOOK|LAPTOP/.test(s)) cat='Notebook';
+  return { brand: tc(brand), model: tc(rest), cat };
+}
+
+function parsePrice(s) {
+  if (!s) return 0;
+  const n = parseFloat(String(s).replace(/[^\d,\.]/g,'').replace(/\./g,'').replace(',','.'));
+  return isNaN(n) ? 0 : Math.round(n);
+}
+function strip(h) { return (h||'').replace(/<[^>]+>/g,' ').replace(/&\w+;/g,' ').replace(/\s+/g,' ').trim(); }
+function tc(s) { return s.toLowerCase().replace(/(?:^|\s)\S/g,a=>a.toUpperCase()); }
