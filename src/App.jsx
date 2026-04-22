@@ -1158,12 +1158,10 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         const fiyatCol=findCol(headers,["fiyat","ücret","tutar","tl","bedel"]);
         const sureCol=findCol(headers,["süre","taahhüt","sure","periyot"]);
         const tipCol=findCol(headers,["faturalı","faturali","ödeme","odeme"]);
-
         if(nameCol<0&&gbCol<0){
           // Sütun bulunamadı — sheet adını kategori olarak kullan, ham oku
           continue;
         }
-
         const cleanN=(v)=>{if(!v&&v!==0)return 0;const s=String(v).replace(/[^0-9.,]/g,"").replace(/\./g,"").replace(",",".");return parseInt(s)||0};
         let currentCat=sheetName;
         const catTariffs={};
@@ -1182,7 +1180,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
           const name=nameCol>=0?String(r[nameCol]||"").trim():"";
           const fiyat=fiyatCol>=0?cleanN(r[fiyatCol]):0;
           if(!name||!fiyat)continue;
-
           const gb=gbCol>=0?cleanN(r[gbCol]):0;
           const dk=dkCol>=0?cleanN(r[dkCol]):0;
           const sms=smsCol>=0?cleanN(r[smsCol]):0;
@@ -1198,7 +1195,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         }
         Object.values(catTariffs).forEach(k=>{if(k.tarifeler.length>0)allTariffs.push(k)});
       }
-
       if(allTariffs.length>0){
         setTarifePreview(allTariffs);
         const total=allTariffs.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
@@ -1252,7 +1248,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         }catch(e){setTarifeMsg(`⚠️ Sayfa ${i} hata: ${e.message}, devam...`)}
         if(i<Math.min(pageCount,15))await new Promise(r=>setTimeout(r,1000));
       }
-      
       if(allTariffs.length>0){
         setTarifePreview(allTariffs);
         const total=allTariffs.reduce((s,c)=>s+(c.tarifeler?.length||0),0);
@@ -1263,7 +1258,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     }catch(e){setTarifeMsg("❌ Hata: "+e.message)}
     setTarifeProcessing(false);
   };
-
   /* ── Tarife Kaydet ── */
   const saveTariffs=async()=>{
     if(!tarifePreview)return;
@@ -1277,7 +1271,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     }catch(e){setTarifeMsg("❌ "+e.message)}
     setTarifeSaving(false);
   };
-
   /* ── Tarife önizlemeden tek kategori sil ── */
   const deleteTarifeKat=(i)=>{if(tarifePreview){const np=[...tarifePreview];np.splice(i,1);setTarifePreview(np)}};
   /* ── Mevcut tarifelere ekle (üzerine yazmak yerine birleştir) ── */
@@ -1291,7 +1284,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     setTarifePreview(merged);
     setTarifeMsg("✅ Mevcut tarifelerle birleştirildi. Toplam "+merged.length+" kategori. Kaydetmek için butona basın.");
   };
-
   // Load SheetJS dynamically
   const loadXLSX=()=>new Promise((resolve)=>{
     if(window.XLSX)return resolve(window.XLSX);
@@ -1300,8 +1292,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     s.onload=()=>resolve(window.XLSX);
     document.head.appendChild(s);
   });
-
-  /* ── Excel İşleme (6 Kural) ── */
+  /* ── Excel İşleme (YENİ - Abdurrahman kuralları gömülü) ── */
   const processExcel=async(file)=>{
     setUploadMsg("Excel okunuyor...");setPreview(null);
     const XLSX=await loadXLSX();
@@ -1311,10 +1302,11 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
     const startRow=5;
     const cleanNum=(v)=>{if(!v||v==="")return 0;const s=String(v).replace(/₺/g,"").replace(/\./g,"").replace(/,/g,".").trim();return parseFloat(s)||0};
-    const models={};let curCat="";
-    const offsets={telefon:0,tablet:1000,notebook:2000,aksesuar:3000,vinn:4000};
-    const counters={telefon:0,tablet:0,notebook:0,aksesuar:0,vinn:0};
-    let skippedCheap=0;
+    // YENİ KURAL: Filtrelenecek ürün adı anahtarları
+    const BAD_KEYWORDS=["SEGMENTED","TEST1","TEST","EGYG","EGY","MUSTERI OZEL","UPGRADERS","3 AY OZEL","ONLINE OZEL","TAKSIT OTELEME"];
+    const hasBadKeyword=(n)=>{const up=n.toUpperCase();return BAD_KEYWORDS.some(kw=>up.includes(kw))};
+    const models={};
+    let skippedCheap=0,skippedBad=0,skippedCat=0;
     for(let i=startRow;i<rows.length;i++){
       const r=rows[i];if(!r||r.length<5)continue;
       const rawCat=String(r[0]||"").trim();
@@ -1322,37 +1314,39 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
       const marka=String(r[2]||"").trim();
       const urunAdi=String(r[4]||"").trim();
       if(!marka||!urunAdi)continue;
-      if(rawCat)curCat=rawCat;
-      let catKey="";
-      if(/telefon/i.test(curCat))catKey="telefon";
-      else if(/aksesuar/i.test(curCat))catKey="aksesuar";
-      else if(/tablet/i.test(curCat))catKey="tablet";
-      else if(/notebook/i.test(curCat))catKey="notebook";
-      else if(/vinn/i.test(curCat))catKey="vinn";
-      else continue;
-      const vade=cleanNum(r[7]);const aylik=cleanNum(r[9]);const olm=cleanNum(r[10]);const vadeFarki=cleanNum(r[12]);const toplamKontrat=cleanNum(r[13]);const tskf=cleanNum(r[14]);
+      // YENİ KURAL A: Sadece "Akıllı Telefon" kategorisi
+      if(!/Akıllı Telefon/i.test(rawCat)){skippedCat++;continue}
+      // YENİ KURAL B: Bad keyword filtresi (SEGMENTED, TEST, 3 AY OZEL vs.)
+      if(hasBadKeyword(urunAdi)){skippedBad++;continue}
+      const vade=cleanNum(r[7]);
+      const aylik=cleanNum(r[9]);
+      const olm=cleanNum(r[10]);
+      const vadeFarki=cleanNum(r[12]);
+      const toplamKontrat=cleanNum(r[13]);
+      const tskf=cleanNum(r[14]);
       const isPesin=(aylik===0&&vadeFarki===0);
-      if(isPesin&&catKey==="telefon"&&toplamKontrat<5000&&toplamKontrat>0){skippedCheap++;continue}
-      const key=`${catKey}|${marka}|${urunAdi}`;
+      // YENİ KURAL C: K (olm) < 5000 TL ise atla
+      if(olm>0&&olm<5000){skippedCheap++;continue}
+      const key=`telefon|${marka}|${urunAdi}`;
       if(!models[key]){
-        const id=offsets[catKey]+counters[catKey]++;
-        models[key]={id,m:marka,n:urunAdi,p:Math.round(tskf),pi:null,t3:0,t3t:0,t6:0,t6t:0,t9:0,t9t:0,t12:0,t12t:0,t24:0,t24t:0,t36:0,t36t:0,_cat:catKey};
+        const id=Object.keys(models).length;
+        models[key]={id,m:marka,n:urunAdi,p:0,pi:null,t3:0,t3t:0,t6:0,t6t:0,t9:0,t9t:0,t12:0,t12t:0,t24:0,t24t:0,t36:0,t36t:0};
       }
       const m=models[key];
-      if(isPesin&&olm>0){m.p=Math.round(olm)}else if(tskf>0&&m.p===0){m.p=Math.round(tskf)} 
+      // YENİ KURAL D: Peşin fiyatı K (olm) sütunundan al, O (tskf) sadece yedek
+      if(isPesin&&olm>0){m.p=Math.round(olm)}
+      else if(tskf>0&&m.p===0){m.p=Math.round(tskf)}
       const v=Math.round(vade);
       if([3,6,9,12,24,36].includes(v)&&aylik>0){
         const cur=m[`t${v}`];
         if(cur===0||aylik<cur){m[`t${v}`]=Math.round(aylik*100)/100;m[`t${v}t`]=Math.round(toplamKontrat)}
       }
     }
-    const result={telefon:[],tablet:[],notebook:[],aksesuar:[],vinn:[]};
-    Object.values(models).forEach(m=>{const c=m._cat;delete m._cat;result[c].push(m)});
-    const stats={telefon:result.telefon.length,tablet:result.tablet.length,notebook:result.notebook.length,aksesuar:result.aksesuar.length,vinn:result.vinn.length};
+    const result={telefon:Object.values(models),tablet:[],notebook:[],aksesuar:[],vinn:[]};
+    const stats={telefon:result.telefon.length,tablet:0,notebook:0,aksesuar:0,vinn:0};
     setPreview({result,stats,skippedCheap});
-    setUploadMsg(`✅ Hazır! ${stats.telefon} tel, ${stats.tablet} tab, ${stats.notebook} nb, ${stats.aksesuar} aks, ${stats.vinn} VINN.${skippedCheap>0?" ("+skippedCheap+" ucuz filtrelendi)":""}`);
+    setUploadMsg(`✅ Hazır! ${stats.telefon} telefon. (${skippedCat} farklı kategori, ${skippedBad} varyant, ${skippedCheap} ucuz atlandı)`);
   };
-
   const uploadToGitHub=async()=>{
     if(!preview)return;
     setUploading(true);setUploadMsg("GitHub'a yükleniyor...");
@@ -1364,7 +1358,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
     }catch(e){setUploadMsg("❌ Bağlantı: "+e.message)}
     setUploading(false);
   };
-
   /* ── Chatbot Ek Kurallar Kaydet ── */
   const saveKB=async()=>{
     setKbSaving(true);setKbMsg("Kaydediliyor...");
