@@ -1330,7 +1330,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
       else if(/notebook/i.test(curCat))catKey="notebook";
       else if(/vinn/i.test(curCat))catKey="vinn";
       else continue;
-      const vade=cleanNum(r[7]);const aylik=cleanNum(r[9]);const vadeFarki=cleanNum(r[12]);const toplamKontrat=cleanNum(r[13]);const tskf=cleanNum(r[14]);
+      const vade=cleanNum(r[7]);const aylik=cleanNum(r[9]);const olm=cleanNum(r[10]);const vadeFarki=cleanNum(r[12]);const toplamKontrat=cleanNum(r[13]);const tskf=cleanNum(r[14]);
       const isPesin=(aylik===0&&vadeFarki===0);
       if(isPesin&&catKey==="telefon"&&toplamKontrat<5000&&toplamKontrat>0){skippedCheap++;continue}
       const key=`${catKey}|${marka}|${urunAdi}`;
@@ -1339,7 +1339,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         models[key]={id,m:marka,n:urunAdi,p:Math.round(tskf),pi:null,t3:0,t3t:0,t6:0,t6t:0,t9:0,t9t:0,t12:0,t12t:0,t24:0,t24t:0,t36:0,t36t:0,_cat:catKey};
       }
       const m=models[key];
-      if(tskf>0&&m.p===0)m.p=Math.round(tskf);
+      if(isPesin&&olm>0){m.p=Math.round(olm)}else if(tskf>0&&m.p===0){m.p=Math.round(tskf)} 
       const v=Math.round(vade);
       if([3,6,9,12,24,36].includes(v)&&aylik>0){
         const cur=m[`t${v}`];
