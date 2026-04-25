@@ -2154,24 +2154,19 @@ function ChatBotSystem({fullPage=false, onClose}){
   const buildDeviceSummary=()=>{
     if(!siteData.devices)return "";
     const fmt=(arr)=>{
-      if(!arr||arr.length===0)return "Yok";
+      if(!arr||arr.length===0)return "yok";
       const markalar={};
-      arr.forEach(d=>{
-        if(!markalar[d.m])markalar[d.m]=[];
-        markalar[d.m].push(d.n+": "+d.p?.toLocaleString('tr-TR')+" TL");
-      });
-      return Object.entries(markalar).map(([m,liste])=>
-        m+" ("+liste.length+" model): "+liste.join(", ")
-      ).join("\n");
+      arr.forEach(d=>{if(!markalar[d.m])markalar[d.m]=[];markalar[d.m].push(d.n+"="+(d.p||0))});
+      return Object.entries(markalar).map(([m,liste])=>m+":"+liste.join(" | ")).join("\n");
     };
-    return `\n\n--- GÜNCEL CİHAZ FİYATLARI (siteden canlı) ---\nTELEFONLAR:\n${fmt(siteData.devices.telefon)}\n\nTABLETLER:\n${fmt(siteData.devices.tablet)}\n\nNOTEBOOKLAR:\n${fmt(siteData.devices.notebook)}\n\nAKSESUARLAR:\n${fmt(siteData.devices.aksesuar)}\n---`;
+    return `\n\n--- GÜNCEL CİHAZ FİYATLARI (TL, peşin) ---\nTELEFON:\n${fmt(siteData.devices.telefon)}\nTABLET:\n${fmt(siteData.devices.tablet)}\nNOTEBOOK:\n${fmt(siteData.devices.notebook)}\nAKSESUAR:\n${fmt(siteData.devices.aksesuar)}\n---`;
   };
 
   const buildTariffSummary=()=>{
     if(!siteData.tariffs)return "";
-    return "\n\n--- GÜNCEL TARİFELER (admin panelinden güncel) ---\n"+
-      siteData.tariffs.map(kat=>`\n[${kat.ad}] ${kat.sure} | ${kat.aciklama||""}\n`+
-        (kat.tarifeler||[]).map(t=>`  • ${t.ad}: ${t.gb>0?t.gb+" GB":""}${t.dk>0?" "+t.dk+" DK":""}${t.sms>0?" "+t.sms+" SMS":""} → ${t.fiyat} TL/ay`).join("\n")
+    return "\n\n--- GÜNCEL TARİFELER ---\n"+
+      siteData.tariffs.map(kat=>`[${kat.ad}] ${kat.sure}${kat.aciklama?" | "+kat.aciklama:""}\n`+
+        (kat.tarifeler||[]).map(t=>`• ${t.ad}: ${t.gb>0?t.gb+"GB ":""}${t.dk>0?t.dk+"DK ":""}${t.sms>0?t.sms+"SMS ":""}→ ${t.fiyat} TL/ay`).join("\n")
       ).join("\n")+"\n---";
   };
 
@@ -2233,20 +2228,27 @@ function ChatBotSystem({fullPage=false, onClose}){
       {a:"125.001–150.000",akgP:9916,akgT:12384,apP:19139,apT:23922},{a:"150.001–200.000",akgP:10363,akgT:12942,apP:20001,apT:24984},
       {a:"200.001+",akgP:10881,akgT:13590,apP:21001,apT:26244},
     ];
-    return "\n\n--- GÜNCEL CİHAZ KASKO (AKG/AKG+) FİYATLARI (5G indirimli, yıllık) ---\nKasko fiyatları cihaz peşin fiyat aralığına göre belirlenir, marka/model bazlı değildir.\nFiyat Aralığı (₺) | AKG Peşin | AKG Taksitli | AKG+ Peşin | AKG+ Taksitli\n"+
-      rows.map(r=>`${r.a} | ${r.akgP} TL | ${r.akgT} TL | ${r.apP} TL | ${r.apT} TL`).join("\n")+
-      "\nNOT: Müşteriye kasko fiyatı sorulduğunda önce cihaz fiyatını sor, sonra bu tablodaki uygun aralığa göre AKG ve AKG Plus fiyatları bildir.\n---";
+    return "\n\n--- CİHAZ KASKO (AKG/AKG+) FİYATLARI (5G ind, TL/yıl) ---\nAralık | AKG-P | AKG-T | AKG+P | AKG+T\n"+
+      rows.map(r=>`${r.a}|${r.akgP}|${r.akgT}|${r.apP}|${r.apT}`).join("\n")+
+      "\nNOT: Önce cihaz peşin fiyatını sor, sonra doğru aralıktan oku.\n---";
   };
 
   const buildMarketSummary=()=>{
     if(!siteData.market||!siteData.market.items||siteData.market.items.length===0)return "";
-    const items=siteData.market.items.slice(0,50);
-    return "\n\n--- GÜNCEL PEŞİN PİYASA FİYATLARI (market API'den canlı) ---\nBu fiyatlar 2. el veya peşin piyasa referans fiyatlarıdır.\n"+
-      items.map(it=>`${it.name}: ${it.price?.toLocaleString('tr-TR')} TL (piyasa)`).join("\n")+
-      `\nToplam ${siteData.market.count||items.length} ürün | Son güncelleme: ${siteData.market.updated||"bilinmiyor"}\n---`;
+    const items=siteData.market.items.slice(0,40);
+    return "\n\n--- PEŞİN PİYASA FİYATLARI (2.el referans, TL) ---\n"+
+      items.map(it=>`${it.name}=${it.price||0}`).join("\n")+
+      `\n(${siteData.market.count||items.length} ürün, son: ${siteData.market.updated||"?"})\n---`;
   };
 
-  const getSystemPrompt=()=>`${mainKB}
+  const getSystemPrompt=(lastUserMsg="",hasFile=false)=>{
+    const q=(lastUserMsg||"").toLowerCase();
+    const has=(...kw)=>kw.some(k=>q.includes(k));
+    // Dosya yüklendiğinde her şey dahil edilir (içerik herhangi bir konuya değinebilir)
+    const wantsKasko=hasFile||has("kasko","akg","sigorta","garanti","koruma","ekran kır");
+    const wantsMarket=hasFile||has("peşin","pesin","ikinci el","2.el","2. el","piyasa","nakit","yenilenmiş","ikinciel");
+    const wantsEi=hasFile||has("fiber","superbox","ev internet","tv+","tv plus","modem","wifi","mbps","mb/s","megabit");
+    return `${mainKB}
 
 EK TALİMATLAR:
 - Sen Elfin İletişim'in samimi, sıcak dijital asistanısın. Adın "Elfin Asistan".
@@ -2270,7 +2272,8 @@ EK TALİMATLAR:
 ÇELİŞKİ TESPİTİ — ÇOK ÖNEMLİ:
 Eğer "MAĞAZA SAHİBİNDEN EK KURALLAR" bölümündeki bir direktif ile "GÜNCEL" veriler arasında açık bir çelişki fark edersen (örn: direktifte "X tarifesi 300 TL" yazıyor ama güncel tarife listesinde 350 TL görünüyor), cevabının EN SONUNA şu formatı EKLE:
 [ÇELİŞKİ: <kısa açıklama>]
-Bu etiketi sadece gerçek çelişkilerde kullan, her mesajda ekleme.${buildTariffSummary()}${buildDeviceSummary()}${buildKaskoSummary()}${buildMarketSummary()}${buildEiSummary()}${extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:""}`;
+Bu etiketi sadece gerçek çelişkilerde kullan, her mesajda ekleme.${buildTariffSummary()}${buildDeviceSummary()}${wantsKasko?buildKaskoSummary():""}${wantsMarket?buildMarketSummary():""}${wantsEi?buildEiSummary():""}${extraKB?`\n\n--- MAĞAZA SAHİBİNDEN EK KURALLAR VE BİLGİLER ---\n${extraKB}`:""}`;
+  };
 
   /* ── XLSX LAZY LOAD ── */
   const loadXLSX=()=>new Promise(resolve=>{
@@ -2401,7 +2404,19 @@ Bu etiketi sadece gerçek çelişkilerde kullan, her mesajda ekleme.${buildTarif
   /* ── AI REPLY ── */
   const aiReply=async(allMsgs)=>{
     const apiMsgs=allMsgs.filter(m=>m.role!=="system").map(m=>({role:m.role,content:m.content})).slice(-12);
-    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:apiMsgs,system: getSystemPrompt()})});
+    // Son kullanıcı mesajının düz metnini ve dosya var mı bilgisini çıkar (koşullu prompt için)
+    const lastUser=[...apiMsgs].reverse().find(m=>m.role==="user");
+    let lastText="";let hasFile=false;
+    if(lastUser){
+      if(typeof lastUser.content==="string")lastText=lastUser.content;
+      else if(Array.isArray(lastUser.content)){
+        lastUser.content.forEach(c=>{
+          if(c.type==="text")lastText+=" "+(c.text||"");
+          if(c.type==="image"||c.type==="document")hasFile=true;
+        });
+      }
+    }
+    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:apiMsgs,system:getSystemPrompt(lastText,hasFile)})});
     if(!res.ok)throw new Error("API error");
     const data=await res.json();if(data.error)throw new Error(data.error);
     return data.reply;
