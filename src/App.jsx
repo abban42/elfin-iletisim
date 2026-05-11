@@ -2260,7 +2260,6 @@ EK TALİMATLAR:
 - RAKİP KURAL: Vodafone, Türk Telekom veya başka operatörleri ASLA kötüleme, küçümseme veya olumsuz karşılaştırma yapma. Sadece Turkcell'in avantajlarını anlat. Müşteri "Vodafone'dan geliyorum" derse "Süper, hoş geldin! Numara taşıma ile geçiş çok kolay" gibi pozitif karşıla.
 - SATIŞA YÖNLENDİR: Her cevabın sonunda nazikçe mağazaya veya WhatsApp'a yönlendir. "Hadi gel mağazada bi bakalım!" veya "WhatsApp'tan yaz, hemen ilgilenelim!" gibi.
 - ÖNEMLİ: Tarifeler SADECE yeni hat, MNT ve Switch için geçerlidir. Mevcut faturalı hat tarife değişikliği için "mağazamızı aramanı öneririm" de.
-- ÖNEMLİ: Yapboz tarifesi ARTIK YOKTUR, bunu sorarlarsa "Maalesef Yapboz kalktı ama sana daha uygun seçeneklerimiz var!" de.
 - Switch = Kontörlü Turkcell'den faturalı Turkcell'e geçiş. Başka operatörden değil.
 - WhatsApp: 0532 682 22 77
 - Telefon: 0532 682 22 77
@@ -2354,7 +2353,6 @@ Bu etiketi sadece gerçek çelişkilerde kullan, her mesajda ekleme.${buildTarif
     if(has("saat","kaçta","açık mı","kapalı")) return "🕐 Çalışma saatlerimiz:\nHafta içi + Cumartesi: 09:00-22:00\nPazar: 11:00-22:00";
     if(has("kampanya","fırsat","çekiliş","hediye","200 tl")) return "🎁 200 TL alışveriş çeki — Faturalıya geçiş/yeni hat alımına!\niPhone 15 çekilişi — 2026 sonuna kadar!\nDetay: 0532 682 22 77 💬";
     if(has("5g")) return "⚡ 1 Nisan 2026'da 5G başlıyor!\n5G modeller: Galaxy S25, Vivo Y29S, iPhone 15, Samsung A17 5G\nSuperbox 5G paketleri de mevcut!";
-    if(has("yapboz")) return "Maalesef Yapboz tarifesi sona erdi. Ama size uygun başka harika tarifelerimiz var! Ne tür bir tarife arıyorsunuz? 😊";
     if(has("switch")) return "Switch = Kontörlü (faturasız) Turkcell hattınızı faturalıya geçirmek. Aynı numara kalır. Prestij ve Bol Star gibi avantajlı tarife seçenekleri var. Detay için mağazamızı arayın: 0532 682 22 77";
     if(has("hat bedel","hat ücret","hat fiyat","yeni hat")) return "💳 Yeni hat açılış bedeli: 1.250 TL\nFaturalıda 12 taksit (~104 TL/ay)\nÖn ödemelide peşin ödenir.";
     if(has("sim değ","sim kart")) return "SIM değişikliği: 180 TL";
