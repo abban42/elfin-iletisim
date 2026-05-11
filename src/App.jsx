@@ -846,7 +846,7 @@ function TariffDetail({t}){
     <div style={{position:"relative",zIndex:1}}>
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18,flexWrap:"wrap"}}>
         <div style={{width:48,height:48,borderRadius:14,background:"var(--blt)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>{t.ikon}</div>
-        <div style={{flex:1,minWidth:120}}><h2 style={{fontSize:18,fontWeight:800,color:"var(--txt)"}}>{t.ad}</h2><div style={{fontSize:10,color:"var(--txt3)"}}>{t.kategori} • {t.sure} • {t.tip==="faturali"?"Faturalı":"Ön Ödemeli"}</div></div>
+        <div style={{flex:1,minWidth:120}}><h2 style={{fontSize:18,fontWeight:800,color:"var(--txt)"}}>{t.ad}</h2><div style={{fontSize:10,color:"var(--txt3)"}}>{(()=>{const isOn=t.tip==="onodemeli"||/ön|hazır|prepaid/i.test(t.kategori||"");return `${t.kategori}${isOn?"":" • "+t.sure} • ${isOn?"Ön Ödemeli":"Faturalı"}`})()}</div></div>
         <div style={{textAlign:"right"}}><div style={{fontSize:26,fontWeight:900,color:"var(--acc)"}}>₺{t.fiyat}</div><div style={{fontSize:9,color:"var(--txt3)"}}>/ aylık</div></div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
