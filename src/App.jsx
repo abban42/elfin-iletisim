@@ -294,6 +294,7 @@ function MobileMenu({page,setPage,onBildirim,onAdmin,isAdmin}){
 
 /* ═══ HOME BANNERS (Dinamik, Admin Panelden Yönetilir) ═══ */
 function HomeBanners({banners,onNav}){
+  const[lightbox,setLightbox]=useState(null);
   const defaultBanners=[
     {title:"ANINDA 200 TL ALIŞVERİŞ ÇEKİ",label:"2026 SONUNA KADAR",subtitle:"Faturalıya Geçiş veya Yeni Hat Alımına",desc:"+ iPHONE 15 ÇEKİLİŞİ — Her faturalı işleme çekiliş hakkı!",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"tariff"},
     {title:"5G ARTIK AKTİF!",subtitle:"Galaxy S25 • iPhone 15 • Vivo Y29S • Samsung A17 5G",desc:"Turkcell 5G ile geleceğe hazır olun!",bg:"linear-gradient(135deg,#0d7c3d,#15a050)",color:"#fff",action:"phone"},
@@ -301,10 +302,11 @@ function HomeBanners({banners,onNav}){
   const items=(banners&&banners.length>0)?banners:defaultBanners;
   if(!items||items.length===0)return null;
   return(<div style={{display:"flex",flexDirection:"column",gap:10,maxWidth:540,margin:"0 auto 14px"}}>
+    {lightbox?<div onClick={()=>setLightbox(null)} style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.85)",display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}><img src={lightbox} alt="" style={{maxWidth:"95vw",maxHeight:"90vh",borderRadius:12,objectFit:"contain",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}} onClick={e=>{e.stopPropagation();setLightbox(null)}}/><button onClick={()=>setLightbox(null)} style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,.2)",border:"none",color:"#fff",width:36,height:36,borderRadius:18,fontSize:18,cursor:"pointer"}}>✕</button></div>:null}
     {items.map((b,i)=>(
       <div key={i} onClick={()=>{if(b.action)onNav(b.action)}} style={{background:b.bg||"linear-gradient(135deg,#253B80,#1a2d62)",borderRadius:14,padding:"16px 20px",overflow:"hidden",position:"relative",cursor:b.action?"pointer":"default",transition:"transform .2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.01)"}} onMouseLeave={e=>{e.currentTarget.style.transform=""}}>
         <div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent)",backgroundSize:"200% 100%",animation:"shimmerBg 3s linear infinite"}} />
-        {b.image?<img src={b.image} alt="" style={{width:"100%",borderRadius:10,marginBottom:8,position:"relative",zIndex:1}} onError={e=>{e.target.style.display="none"}}/>:null}
+        {b.image?<img src={b.image} alt="" style={{width:"100%",borderRadius:10,marginBottom:8,position:"relative",zIndex:1,cursor:"zoom-in"}} onClick={e=>{e.stopPropagation();setLightbox(b.image)}} onError={e=>{e.target.style.display="none"}}/>:null}
         <div style={{position:"relative",zIndex:1,textAlign:"center"}}>
           {b.label?<div style={{fontSize:10,color:"var(--tc)",fontWeight:800,letterSpacing:2,marginBottom:4}}>{b.label}</div>:null}
           <div style={{fontSize:17,fontWeight:900,color:b.color||"#fff",lineHeight:1.3}}>{b.title}</div>
@@ -1071,6 +1073,27 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
   const[bnrForm,setBnrForm]=useState({title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""});
   const bgOpts=["linear-gradient(135deg,#253B80,#1a2d62)","linear-gradient(135deg,#0d7c3d,#15a050)","linear-gradient(135deg,#E8A800,#d4990a)","linear-gradient(135deg,#00B4D8,#0090b0)","linear-gradient(135deg,#E17055,#c0503a)","linear-gradient(135deg,#7B61FF,#5a40d9)","linear-gradient(135deg,#D4548A,#b03868)","linear-gradient(135deg,#1a1a2e,#16213e)","linear-gradient(135deg,#25D366,#128C7E)","#253B80","#0d7c3d","#E8A800","#1a1a2e"];
   const saveBanners=async()=>{setBnrSaving(true);setBnrMsg("Kaydediliyor...");try{const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",file:"public/banners.json",data:{banners:bnrs,_updated:new Date().toISOString()},message:"Banner guncelleme - "+bnrs.length+" adet"})});const d=await res.json();if(d.success){setBnrMsg("✅ Bannerlar kaydedildi! ~30sn içinde aktif.");setDynBanners(bnrs)}else{setBnrMsg("❌ "+d.error)}}catch(e){setBnrMsg("❌ "+e.message)}setBnrSaving(false)};
+  const bnrImgRef=useRef(null);
+  const[bnrImgUploading,setBnrImgUploading]=useState(false);
+  const uploadBnrImage=async function(file){
+    if(!file)return;
+    if(file.size>5*1024*1024){setBnrMsg("❌ Dosya çok büyük (max 5MB)");return}
+    setBnrImgUploading(true);setBnrMsg("📷 Resim yükleniyor...");
+    try{
+      var reader=new FileReader();
+      reader.onload=async function(){
+        var base64=reader.result;
+        var ext=file.name.split(".").pop().toLowerCase();
+        var safeName="banner_"+Date.now()+"."+ext;
+        var res=await fetch("/api/upload-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",imageData:base64,fileName:safeName})});
+        var d=await res.json();
+        if(d.success){setBnrForm(Object.assign({},bnrForm,{image:d.url}));setBnrMsg("✅ Resim yüklendi: "+d.url+" (~30sn sonra görünür)")}
+        else{setBnrMsg("❌ "+d.error)}
+        setBnrImgUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }catch(e){setBnrMsg("❌ "+e.message);setBnrImgUploading(false)}
+  };
   const startBnrEdit=(i)=>{setBnrEditIdx(i);setBnrForm(i===null?{title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""}:{...bnrs[i]})};
   const saveBnrEdit=()=>{if(!bnrForm.title)return;const np=[...bnrs];if(bnrEditIdx===null)np.push({...bnrForm});else np[bnrEditIdx]={...bnrForm};setBnrs(np);setBnrEditIdx(null);setBnrForm({title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""})};
   const deleteBnr=(i)=>{if(window.confirm("Bu banner'ı silmek istediğinize emin misiniz?"))setBnrs(bnrs.filter(function(_,j){return j!==i}))};
@@ -1915,7 +1938,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Alt Yazı</label><input value={bnrForm.subtitle||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{subtitle:e.target.value}))}} placeholder="Galaxy S25 • iPhone 15..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Açıklama</label><input value={bnrForm.desc||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{desc:e.target.value}))}} placeholder="+ iPHONE 15 ÇEKİLİŞİ..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
             </div>
-            <div style={{marginTop:8}}><label style={{fontSize:9,color:"var(--txt3)"}}>📷 Görsel URL (opsiyonel)</label><input value={bnrForm.image||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{image:e.target.value}))}} placeholder="https://example.com/banner.jpg" style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>{bnrForm.image?<img src={bnrForm.image} alt="" style={{width:"100%",maxHeight:100,objectFit:"cover",borderRadius:6,marginTop:4}} onError={function(e){e.target.style.display="none"}}/>:null}</div>
+            <div style={{marginTop:8}}><label style={{fontSize:9,color:"var(--txt3)"}}>📷 Görsel</label><div style={{display:"flex",gap:6,marginTop:3}}><input value={bnrForm.image||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{image:e.target.value}))}} placeholder="URL veya aşağıdan yükle" style={{flex:1,border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/><input ref={bnrImgRef} type="file" accept="image/*" onChange={function(e){if(e.target.files[0])uploadBnrImage(e.target.files[0])}} style={{display:"none"}}/><button onClick={function(){bnrImgRef.current.click()}} disabled={bnrImgUploading} style={{background:"#7B61FF",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",opacity:bnrImgUploading?.5:1}}>{bnrImgUploading?"⏳":"📁 Yükle"}</button></div>{bnrForm.image?<img src={bnrForm.image} alt="" style={{width:"100%",maxHeight:100,objectFit:"cover",borderRadius:6,marginTop:4}} onError={function(e){e.target.style.display="none"}}/>:null}</div>
             <div style={{display:"flex",gap:8,marginTop:8,alignItems:"end",flexWrap:"wrap"}}>
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Arka Plan</label><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{bgOpts.map(function(c,ci){return <div key={ci} onClick={function(){setBnrForm(Object.assign({},bnrForm,{bg:c}))}} style={{width:20,height:20,borderRadius:4,background:c,cursor:"pointer",border:bnrForm.bg===c?"2px solid #000":"2px solid transparent"}}/>})}</div></div>
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Tıklayınca</label><select value={bnrForm.action||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{action:e.target.value}))}} style={{border:"1px solid var(--brd)",borderRadius:6,padding:"5px 8px",fontSize:10,fontFamily:"inherit"}}><option value="">Yok</option>{actionOpts.map(function(a){return <option key={a.v} value={a.v}>{a.l}</option>})}</select></div>
