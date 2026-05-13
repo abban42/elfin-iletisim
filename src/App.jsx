@@ -96,6 +96,7 @@ export default function App(){
   const[chatbotExtra,setChatbotExtra]=useState("");
   const[chatbotMain,setChatbotMain]=useState("");
   const[dynPromos,setDynPromos]=useState(null);
+  const[dynBanners,setDynBanners]=useState(null);
   const[evInternetDocs,setEvInternetDocs]=useState([]);
   const[evInternetTariffs,setEvInternetTariffs]=useState(null);
   const[marketPrices,setMarketPrices]=useState(null);
@@ -114,6 +115,10 @@ export default function App(){
 
     fetch("/promos.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&Array.isArray(d.promos)&&d.promos.length>0){setDynPromos(d.promos);console.log("[Elfin] promos.json yüklendi:",d.promos.length,"reklam")}
+    }).catch(()=>{});
+
+    fetch("/banners.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&Array.isArray(d.banners)&&d.banners.length>0){setDynBanners(d.banners);console.log("[Elfin] banners.json yüklendi:",d.banners.length,"banner")}
     }).catch(()=>{});
 
     fetch("/chatbot_kb_main.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
@@ -208,10 +213,10 @@ export default function App(){
       <ChatBot />
 
       {showBildirim&&<BildirimKayitModal onClose={()=>setShowBildirim(false)} />}
-      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} chatbotMain={chatbotMain} setChatbotMain={setChatbotMain} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} evInternetTariffs={evInternetTariffs} setEvInternetTariffs={setEvInternetTariffs} marketMargin={marketMargin} setMarketMargin={updateMargin} marketPrices={marketPrices} refreshMarket={refreshMarket} marketLoading={marketLoading} onClose={()=>setShowAdmin(false)} />}
+      {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} dynBanners={dynBanners} setDynBanners={setDynBanners} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} chatbotMain={chatbotMain} setChatbotMain={setChatbotMain} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} evInternetTariffs={evInternetTariffs} setEvInternetTariffs={setEvInternetTariffs} marketMargin={marketMargin} setMarketMargin={updateMargin} marketPrices={marketPrices} refreshMarket={refreshMarket} marketLoading={marketLoading} onClose={()=>setShowAdmin(false)} />}
 
       <main style={{maxWidth:1440,margin:"0 auto",padding:"0 20px"}}>
-        {page==="home"&&<Home onNav={navigate} devices={devices} marketPrices={marketPrices} marketMargin={marketMargin} marketLoading={marketLoading}/>}
+        {page==="home"&&<Home onNav={navigate} devices={devices} marketPrices={marketPrices} marketMargin={marketMargin} marketLoading={marketLoading} banners={dynBanners}/>}
         {page==="phone"&&<DevicePage data={devices.phone} title="Akıllı Telefonlar" sub={`${devices.phone.length} model — Tüm Turkcell taksit seçenekleri`} backRef={backRef}/>}
         {page==="tablet"&&<DevicePage data={devices.tablet} title="Tabletler" sub={`${devices.tablet.length} model`} backRef={backRef}/>}
         {page==="notebook"&&<DevicePage data={devices.notebook} title="Notebooklar" sub={`${devices.notebook.length} model`} backRef={backRef}/>}
@@ -287,71 +292,28 @@ function MobileMenu({page,setPage,onBildirim,onAdmin,isAdmin}){
   </div>);
 }
 
-/* ═══ WAVE TEXT BANNER ═══ */
-function WaveText({text, baseDelay=0}) {
-  return (<span>{text.split("").map((ch,i) => (
-    <span key={i} style={{display:"inline-block",animation:`waveChar 2.5s ease-in-out ${baseDelay + i * 0.06}s infinite`,whiteSpace:ch===" "?"pre":"normal"}}>{ch}</span>
-  ))}</span>);
-}
-
-function WaveBanner() {
-  return (
-    <div style={{background:"linear-gradient(135deg,#253B80,#1a2d62)",borderRadius:16,padding:"20px 20px 16px",maxWidth:540,margin:"0 auto 12px",textAlign:"center",overflow:"hidden",position:"relative"}}>
-      <div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.03),transparent)",backgroundSize:"200% 100%",animation:"shimmerBg 3s linear infinite"}} />
-      <div style={{position:"relative",zIndex:1}}>
-        <div style={{fontSize:10,color:"var(--tc)",fontWeight:800,letterSpacing:2}}>2026 SONUNA KADAR</div>
-        <div style={{fontSize:20,fontWeight:900,lineHeight:1.3,marginTop:6}}>
-          <WaveText text="ANINDA " baseDelay={0} />
-          <span style={{display:"inline"}}>{" "}</span>
-          <span style={{color:"var(--tc)",fontSize:24}}><WaveText text="200 TL" baseDelay={0.5} /></span>
+/* ═══ HOME BANNERS (Dinamik, Admin Panelden Yönetilir) ═══ */
+function HomeBanners({banners,onNav}){
+  const defaultBanners=[
+    {title:"ANINDA 200 TL ALIŞVERİŞ ÇEKİ",label:"2026 SONUNA KADAR",subtitle:"Faturalıya Geçiş veya Yeni Hat Alımına",desc:"+ iPHONE 15 ÇEKİLİŞİ — Her faturalı işleme çekiliş hakkı!",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"tariff"},
+    {title:"5G ARTIK AKTİF!",subtitle:"Galaxy S25 • iPhone 15 • Vivo Y29S • Samsung A17 5G",desc:"Turkcell 5G ile geleceğe hazır olun!",bg:"linear-gradient(135deg,#0d7c3d,#15a050)",color:"#fff",action:"phone"},
+  ];
+  const items=(banners&&banners.length>0)?banners:defaultBanners;
+  if(!items||items.length===0)return null;
+  return(<div style={{display:"flex",flexDirection:"column",gap:10,maxWidth:540,margin:"0 auto 14px"}}>
+    {items.map((b,i)=>(
+      <div key={i} onClick={()=>{if(b.action)onNav(b.action)}} style={{background:b.bg||"linear-gradient(135deg,#253B80,#1a2d62)",borderRadius:14,padding:"16px 20px",overflow:"hidden",position:"relative",cursor:b.action?"pointer":"default",transition:"transform .2s"}} onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.01)"}} onMouseLeave={e=>{e.currentTarget.style.transform=""}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent)",backgroundSize:"200% 100%",animation:"shimmerBg 3s linear infinite"}} />
+        {b.image?<img src={b.image} alt="" style={{width:"100%",borderRadius:10,marginBottom:8,position:"relative",zIndex:1}} onError={e=>{e.target.style.display="none"}}/>:null}
+        <div style={{position:"relative",zIndex:1,textAlign:"center"}}>
+          {b.label?<div style={{fontSize:10,color:"var(--tc)",fontWeight:800,letterSpacing:2,marginBottom:4}}>{b.label}</div>:null}
+          <div style={{fontSize:17,fontWeight:900,color:b.color||"#fff",lineHeight:1.3}}>{b.title}</div>
+          {b.subtitle?<div style={{fontSize:11,color:"rgba(255,255,255,.7)",marginTop:4}}>{b.subtitle}</div>:null}
+          {b.desc?<div style={{fontSize:10,color:"var(--tc)",marginTop:5,fontWeight:700}}>{b.desc}</div>:null}
         </div>
-        <div style={{fontSize:17,fontWeight:900,marginTop:2}}>
-          <WaveText text="ALIŞVERİŞ ÇEKİ" baseDelay={0.8} />
-        </div>
-        <div style={{fontSize:11,color:"rgba(255,255,255,.6)",marginTop:8}}>Faturalıya Geçiş veya Yeni Hat Alımına</div>
-        <div style={{fontSize:10,color:"var(--tc)",marginTop:6,fontWeight:700}}>+ iPHONE 15 ÇEKİLİŞİ — Her faturalı işleme çekiliş hakkı!</div>
       </div>
-    </div>
-  );
-}
-
-/* ═══ COUNTDOWN BANNER ═══ */
-function CountdownBanner() {
-  const[time,setTime]=useState({d:0,h:0,m:0,s:0});
-  useEffect(()=>{
-    const target=new Date("2026-04-01T00:00:00+03:00").getTime();
-    const calc=()=>{
-      const now=Date.now();const diff=Math.max(0,target-now);
-      setTime({d:Math.floor(diff/86400000),h:Math.floor((diff%86400000)/3600000),m:Math.floor((diff%3600000)/60000),s:Math.floor((diff%60000)/1000)});
-    };
-    calc();const t=setInterval(calc,1000);return()=>clearInterval(t);
-  },[]);
-  const isLive=time.d===0&&time.h===0&&time.m===0&&time.s===0;
-  return(
-    <div style={{background:"linear-gradient(135deg,#0d7c3d,#15a050)",borderRadius:14,padding:"16px 20px",maxWidth:540,margin:"0 auto 24px",overflow:"hidden",position:"relative"}}>
-      <div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent)",backgroundSize:"200% 100%",animation:"shimmerBg 4s linear infinite"}} />
-      <div style={{position:"relative",zIndex:1}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:10}}>
-          <span style={{fontSize:24}}>⚡</span>
-          <div style={{textAlign:"left"}}>
-            <div style={{fontSize:15,fontWeight:900,color:"#fff"}}>{isLive?"5G YAYINDA!":"1 NİSAN'DA 5G BAŞLIYOR!"}</div>
-            <div style={{fontSize:10,color:"rgba(255,255,255,.75)"}}>Galaxy S25 • iPhone 15 • Vivo Y29S • Samsung A17 5G</div>
-          </div>
-        </div>
-        {!isLive&&(
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}>
-            {[{v:time.d,l:"GÜN"},{v:time.h,l:"SAAT"},{v:time.m,l:"DAKİKA"},{v:time.s,l:"SANİYE"}].map((u,i)=>(
-              <div key={i} style={{background:"rgba(0,0,0,.25)",borderRadius:10,padding:"8px 4px",minWidth:52,textAlign:"center",backdropFilter:"blur(4px)"}}>
-                <div style={{fontSize:22,fontWeight:900,color:"#fff",lineHeight:1,animation:u.l==="SANİYE"?"countPulse 1s infinite":"none"}}>{String(u.v).padStart(2,"0")}</div>
-                <div style={{fontSize:7,color:"rgba(255,255,255,.6)",fontWeight:700,letterSpacing:1,marginTop:3}}>{u.l}</div>
-              </div>
-            ))}
-          </div>
-        )}
-        {isLive&&<div style={{textAlign:"center",fontSize:18,fontWeight:900,color:"#fff",animation:"countPulse 1.5s infinite"}}>🎉 5G ARTIK AKTİF!</div>}
-      </div>
-    </div>
-  );
+    ))}
+  </div>);
 }
 
 /* ═══ PROMO CAROUSEL ═══ */
@@ -392,7 +354,7 @@ function PromoCarousel({onNav,dynPromos}){
 }
 
 /* ═══ HOME ═══ */
-function Home({onNav,devices,marketPrices,marketMargin,marketLoading}){
+function Home({onNav,devices,marketPrices,marketMargin,marketLoading,banners}){
   const applyMargin=(price)=>Math.round(price*(1+marketMargin/100));
   return(
     <div className="au" style={{paddingTop:32}}>
@@ -404,18 +366,16 @@ function Home({onNav,devices,marketPrices,marketMargin,marketLoading}){
             <div style={{fontSize:9,color:"var(--txt3)"}}>Konya Zafer Meydanı</div>
           </div>
         </div>
-        <h1 className="hero-title" style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5.5vw,56px)",fontWeight:800,lineHeight:1.08,marginBottom:16,color:"var(--acc)"}}>Hayal Et. Seç. Sahip Ol.</h1>
-        <p style={{fontSize:15,color:"var(--txt2)",maxWidth:520,margin:"0 auto 18px",lineHeight:1.6}}>En yeni akıllı telefonlar, tabletler ve Turkcell'in avantajlı tarifeleri — tek adreste.</p>
-        {/* Kampanya - Mexican Wave Text */}
-        <WaveBanner />
-        {/* 5G Banner with Countdown */}
-        <CountdownBanner />
+        <h1 className="hero-title" style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(22px,4.5vw,42px)",fontWeight:800,lineHeight:1.1,marginBottom:10,color:"var(--acc)"}}>Hayal Et. Seç. Sahip Ol.</h1>
+        <p style={{fontSize:13,color:"var(--txt2)",maxWidth:480,margin:"0 auto 12px",lineHeight:1.5}}>En yeni akıllı telefonlar, tabletler ve Turkcell'in avantajlı tarifeleri — tek adreste.</p>
+        {/* Dinamik Bannerlar */}
+        <HomeBanners banners={banners} onNav={onNav}/>
         <div className="hero-btns" style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
           {[
             {k:"phone",l:"📱 Turkcell Telefon Listesi",bg:"var(--acc)",c:"#fff",big:true},
             {k:"tariff",l:"📡 Turkcell'li Ol",bg:"var(--tc)",c:"#000",big:true},
             {k:"internet",l:"🏠 Ev İnterneti",bg:"#00B4D8",c:"#fff",big:true},
-            {k:"market",l:"💰 Piyasa Fiyat",bg:"#0d7c3d",c:"#fff",bd:false},
+            {k:"market",l:"💰 Piyasa Telefon Listesi",bg:"#0d7c3d",c:"#fff",bd:false},
             {k:"kasko",l:"🛡️ Kasko",bg:"#E17055",c:"#fff",bd:false},
             {k:"aksesuar",l:"🎧 Aksesuar",bg:"#fff",c:"var(--txt)",bd:true},
             {k:"tablet",l:"📋 Tablet",bg:"#fff",c:"var(--txt)",bd:true},
@@ -442,7 +402,7 @@ function Home({onNav,devices,marketPrices,marketMargin,marketLoading}){
         <div style={{marginBottom:36}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div>
-              <h2 style={{fontSize:18,fontWeight:800,color:"var(--acc)"}}>💰 Peşin Telefon & Tablet</h2>
+              <h2 style={{fontSize:18,fontWeight:800,color:"var(--acc)"}}>💰 Piyasa Telefon & Tablet</h2>
               <p style={{fontSize:11,color:"var(--txt3)",marginTop:2}}>Güncel piyasa fiyatları • {marketPrices.count} ürün • Son güncelleme: {marketPrices.updated}</p>
             </div>
             <button onClick={()=>onNav("market")} style={{background:"var(--acc)",color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Tümünü Gör →</button>
@@ -454,7 +414,7 @@ function Home({onNav,devices,marketPrices,marketMargin,marketLoading}){
                 <div style={{fontSize:12,fontWeight:700,color:"var(--txt)",marginBottom:8,lineHeight:1.3,minHeight:32}}>{it.model}</div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
                   <div>
-                    <div style={{fontSize:8,color:"var(--txt3)"}}>Peşin Fiyat</div>
+                    <div style={{fontSize:8,color:"var(--txt3)"}}>Piyasa Fiyat</div>
                     <div style={{fontSize:16,fontWeight:900,color:"#0d7c3d"}}>₺{fmt(applyMargin(it.priceNakit))}</div>
                   </div>
                   <a href={waLink(it.brand+" "+it.model,applyMargin(it.priceNakit))} target="_blank" rel="noreferrer" style={{background:"#25D366",color:"#fff",padding:"5px 10px",borderRadius:6,fontSize:9,fontWeight:700,textDecoration:"none"}}>WhatsApp</a>
@@ -492,7 +452,7 @@ function MarketPricesPage({data,margin,loading,onRefresh}){
   return(
     <div className="au" style={{paddingTop:24}}>
       <div style={{marginBottom:20}}>
-        <h1 style={{fontSize:24,fontWeight:800,color:"var(--acc)",marginBottom:4}}>💰 Peşin Telefon & Tablet Fiyatları</h1>
+        <h1 style={{fontSize:24,fontWeight:800,color:"var(--acc)",marginBottom:4}}>💰 Piyasa Telefon & Tablet Fiyatları</h1>
         <p style={{fontSize:12,color:"var(--txt3)"}}>Güncel piyasa fiyatları • {data.count} ürün • Son güncelleme: {data.updated} {data.stale&&"(önbellek)"}</p>
       </div>
       {/* Filters */}
@@ -521,7 +481,7 @@ function MarketPricesPage({data,margin,loading,onRefresh}){
             <div style={{fontSize:13,fontWeight:700,color:"var(--txt)",marginBottom:10,lineHeight:1.4,minHeight:36}}>{it.model}</div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",borderTop:"1px solid var(--brd)",paddingTop:10}}>
               <div>
-                <div style={{fontSize:8,color:"var(--txt3)"}}>Peşin Satış Fiyatı</div>
+                <div style={{fontSize:8,color:"var(--txt3)"}}>Piyasa Satış Fiyatı</div>
                 <div style={{fontSize:20,fontWeight:900,color:"#0d7c3d"}}>₺{fmt(applyMargin(it.priceNakit))}</div>
                 {it.priceKart>0&&it.priceKart!==it.priceNakit&&<div style={{fontSize:9,color:"var(--txt3)"}}>Kartlı: ₺{fmt(applyMargin(it.priceKart))}</div>}
               </div>
@@ -1059,7 +1019,7 @@ function BildirimKayitModal({onClose}){
 }
 
 /* ═══ ADMIN PANEL ═══ */
-function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotExtra,setChatbotExtra,chatbotMain,setChatbotMain,evInternetDocs,setEvInternetDocs,evInternetTariffs,setEvInternetTariffs,marketMargin,setMarketMargin,marketPrices,refreshMarket,marketLoading,onClose}){
+function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanners,setDynBanners,chatbotExtra,setChatbotExtra,chatbotMain,setChatbotMain,evInternetDocs,setEvInternetDocs,evInternetTariffs,setEvInternetTariffs,marketMargin,setMarketMargin,marketPrices,refreshMarket,marketLoading,onClose}){
   const[tab,setTab]=useState("info");
   const phoneRef=useRef(null);
   const[uploadMsg,setUploadMsg]=useState("");
@@ -1101,7 +1061,20 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
   const[editIdx,setEditIdx]=useState(null);
   const[editForm,setEditForm]=useState({title:"",sub:"",desc:"",color:"#253B80",action:"phone",imageUrl:""});
   const colorOpts=["#253B80","#1428A0","#3A5BC7","#E8A800","#00B4D8","#25D366","#0d7c3d","#D4548A","#E17055","#7B61FF","#636e72","#FF6B6B","#1a1a2e"];
-  const actionOpts=[{v:"phone",l:"Telefon"},{v:"tablet",l:"Tablet"},{v:"notebook",l:"Notebook"},{v:"aksesuar",l:"Aksesuar"},{v:"tariff",l:"Tarife"},{v:"internet",l:"Ev İnterneti"},{v:"contact",l:"İletişim"}];
+  const actionOpts=[{v:"phone",l:"Telefon"},{v:"tablet",l:"Tablet"},{v:"notebook",l:"Notebook"},{v:"aksesuar",l:"Aksesuar"},{v:"tariff",l:"Tarife"},{v:"internet",l:"Ev İnterneti"},{v:"contact",l:"İletişim"},{v:"market",l:"Piyasa Fiyat"},{v:"kasko",l:"Kasko"}];
+  // Banner state
+  const defBnrs=[{title:"ANINDA 200 TL ALIŞVERİŞ ÇEKİ",label:"2026 SONUNA KADAR",subtitle:"Faturalıya Geçiş veya Yeni Hat Alımına",desc:"+ iPHONE 15 ÇEKİLİŞİ",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"tariff",image:""},{title:"5G ARTIK AKTİF!",label:"",subtitle:"Galaxy S25 • iPhone 15 • Vivo Y29S",desc:"Turkcell 5G ile geleceğe hazır olun!",bg:"linear-gradient(135deg,#0d7c3d,#15a050)",color:"#fff",action:"phone",image:""}];
+  const[bnrs,setBnrs]=useState(dynBanners||defBnrs);
+  const[bnrMsg,setBnrMsg]=useState("");
+  const[bnrSaving,setBnrSaving]=useState(false);
+  const[bnrEditIdx,setBnrEditIdx]=useState(null);
+  const[bnrForm,setBnrForm]=useState({title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""});
+  const bgOpts=["linear-gradient(135deg,#253B80,#1a2d62)","linear-gradient(135deg,#0d7c3d,#15a050)","linear-gradient(135deg,#E8A800,#d4990a)","linear-gradient(135deg,#00B4D8,#0090b0)","linear-gradient(135deg,#E17055,#c0503a)","linear-gradient(135deg,#7B61FF,#5a40d9)","linear-gradient(135deg,#D4548A,#b03868)","linear-gradient(135deg,#1a1a2e,#16213e)","linear-gradient(135deg,#25D366,#128C7E)","#253B80","#0d7c3d","#E8A800","#1a1a2e"];
+  const saveBanners=async()=>{setBnrSaving(true);setBnrMsg("Kaydediliyor...");try{const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",file:"public/banners.json",data:{banners:bnrs,_updated:new Date().toISOString()},message:"Banner guncelleme - "+bnrs.length+" adet"})});const d=await res.json();if(d.success){setBnrMsg("✅ Bannerlar kaydedildi! ~30sn içinde aktif.");setDynBanners(bnrs)}else{setBnrMsg("❌ "+d.error)}}catch(e){setBnrMsg("❌ "+e.message)}setBnrSaving(false)};
+  const startBnrEdit=(i)=>{setBnrEditIdx(i);setBnrForm(i===null?{title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""}:{...bnrs[i]})};
+  const saveBnrEdit=()=>{if(!bnrForm.title)return;const np=[...bnrs];if(bnrEditIdx===null)np.push({...bnrForm});else np[bnrEditIdx]={...bnrForm};setBnrs(np);setBnrEditIdx(null);setBnrForm({title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""})};
+  const deleteBnr=(i)=>{if(window.confirm("Bu banner'ı silmek istediğinize emin misiniz?"))setBnrs(bnrs.filter(function(_,j){return j!==i}))};
+  const moveBnr=(i,dir)=>{const np=[...bnrs];const t=np[i];np[i]=np[i+dir];np[i+dir]=t;setBnrs(np)};
   // Tarife OCR state
   const pdfRef=useRef(null);
   const xlsRef=useRef(null);
@@ -1633,7 +1606,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
         <button onClick={onClose} style={{background:"var(--bg2)",border:"1px solid var(--brd)",color:"var(--txt3)",width:32,height:32,borderRadius:8,fontSize:14,cursor:"pointer"}}>✕</button>
       </div>
       <div style={{display:"flex",gap:5,marginBottom:16,flexWrap:"wrap"}}>
-        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("tarife","📋 Tarifeler")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}{tabBtn("evinternet","🏠 Ev İnterneti")}{tabBtn("market","💰 Piyasa")}
+        {tabBtn("info","ℹ️ Bilgi")}{tabBtn("phones","📱 Cihaz")}{tabBtn("tarife","📋 Tarifeler")}{tabBtn("chatbot","🤖 Chatbot")}{tabBtn("promos","📢 Reklamlar")}{tabBtn("banners","🖼️ Bannerlar")}{tabBtn("evinternet","🏠 Ev İnterneti")}{tabBtn("market","💰 Piyasa")}
       </div>
 
       {/* ── BİLGİ ── */}
@@ -1907,6 +1880,53 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,chatbotEx
           <button onClick={savePromos} disabled={promoSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:promoSaving?.5:1}}>{promoSaving?"⏳ Kaydediliyor...":"💾 Reklamları Kaydet & Yayınla"}</button>
         </div>
         {msgBox(promoMsg)}
+      </div>)}
+
+      {/* ── BANNERLAR ── */}
+      {tab==="banners"&&(<div>
+        <div style={{background:"var(--blt)",borderRadius:10,padding:16,marginBottom:14}}>
+          <h3 style={{fontSize:14,fontWeight:700,color:"var(--acc)",marginBottom:4}}>🖼️ Ana Sayfa Bannerları</h3>
+          <p style={{fontSize:10,color:"var(--txt3)",lineHeight:1.5,marginBottom:10}}>Ana sayfadaki banner alanlarını yönetin. Resim URL + yazı ekleyebilirsiniz. JPG, PNG, GIF, WebP desteklenir. Önerilen: 540×200px.</p>
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+            {bnrs.map(function(b,i){return(
+              <div key={i} style={{display:"flex",gap:8,alignItems:"center",background:b.bg||"#253B80",borderRadius:8,padding:10}}>
+                {b.image?<img src={b.image} alt="" style={{width:60,height:36,objectFit:"cover",borderRadius:4,flexShrink:0}} onError={function(e){e.target.style.display="none"}}/>:null}
+                <div style={{flex:1,minWidth:0}}>
+                  {b.label?<div style={{fontSize:8,color:"var(--tc)",fontWeight:700}}>{b.label}</div>:null}
+                  <div style={{fontSize:11,fontWeight:700,color:b.color||"#fff"}}>{b.title}</div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,.7)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{b.subtitle||""}</div>
+                </div>
+                <div style={{display:"flex",gap:4,flexShrink:0}}>
+                  {i>0?<button onClick={function(){moveBnr(i,-1)}} style={{background:"rgba(255,255,255,.2)",border:"none",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer",color:"#fff"}}>↑</button>:null}
+                  {i<bnrs.length-1?<button onClick={function(){moveBnr(i,1)}} style={{background:"rgba(255,255,255,.2)",border:"none",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer",color:"#fff"}}>↓</button>:null}
+                  <button onClick={function(){startBnrEdit(i)}} style={{background:"var(--acc)",border:"none",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer",color:"#fff"}}>✏</button>
+                  <button onClick={function(){deleteBnr(i)}} style={{background:"#dc3545",border:"none",borderRadius:4,width:24,height:24,fontSize:10,cursor:"pointer",color:"#fff"}}>🗑</button>
+                </div>
+              </div>
+            )})}
+          </div>
+          <div style={{background:"var(--bg2)",borderRadius:8,padding:12,marginBottom:10,border:"1px solid var(--brd)"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"var(--acc)",marginBottom:8}}>{bnrEditIdx!==null?"✏️ Düzenle":"➕ Yeni Banner"}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div><label style={{fontSize:9,color:"var(--txt3)"}}>Başlık</label><input value={bnrForm.title} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{title:e.target.value}))}} placeholder="5G ARTIK AKTİF!" style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
+              <div><label style={{fontSize:9,color:"var(--txt3)"}}>Üst Etiket</label><input value={bnrForm.label||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{label:e.target.value}))}} placeholder="2026 SONUNA KADAR" style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginTop:8}}>
+              <div><label style={{fontSize:9,color:"var(--txt3)"}}>Alt Yazı</label><input value={bnrForm.subtitle||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{subtitle:e.target.value}))}} placeholder="Galaxy S25 • iPhone 15..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
+              <div><label style={{fontSize:9,color:"var(--txt3)"}}>Açıklama</label><input value={bnrForm.desc||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{desc:e.target.value}))}} placeholder="+ iPHONE 15 ÇEKİLİŞİ..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
+            </div>
+            <div style={{marginTop:8}}><label style={{fontSize:9,color:"var(--txt3)"}}>📷 Görsel URL (opsiyonel)</label><input value={bnrForm.image||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{image:e.target.value}))}} placeholder="https://example.com/banner.jpg" style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/>{bnrForm.image?<img src={bnrForm.image} alt="" style={{width:"100%",maxHeight:100,objectFit:"cover",borderRadius:6,marginTop:4}} onError={function(e){e.target.style.display="none"}}/>:null}</div>
+            <div style={{display:"flex",gap:8,marginTop:8,alignItems:"end",flexWrap:"wrap"}}>
+              <div><label style={{fontSize:9,color:"var(--txt3)"}}>Arka Plan</label><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{bgOpts.map(function(c,ci){return <div key={ci} onClick={function(){setBnrForm(Object.assign({},bnrForm,{bg:c}))}} style={{width:20,height:20,borderRadius:4,background:c,cursor:"pointer",border:bnrForm.bg===c?"2px solid #000":"2px solid transparent"}}/>})}</div></div>
+              <div><label style={{fontSize:9,color:"var(--txt3)"}}>Tıklayınca</label><select value={bnrForm.action||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{action:e.target.value}))}} style={{border:"1px solid var(--brd)",borderRadius:6,padding:"5px 8px",fontSize:10,fontFamily:"inherit"}}><option value="">Yok</option>{actionOpts.map(function(a){return <option key={a.v} value={a.v}>{a.l}</option>})}</select></div>
+              <button onClick={saveBnrEdit} style={{background:"var(--acc)",border:"none",borderRadius:6,padding:"7px 14px",color:"#fff",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{bnrEditIdx!==null?"✓ Güncelle":"+ Ekle"}</button>
+              {bnrEditIdx!==null?<button onClick={function(){setBnrEditIdx(null);setBnrForm({title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""})}} style={{background:"var(--bg2)",border:"1px solid var(--brd)",borderRadius:6,padding:"7px 14px",color:"var(--txt3)",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>İptal</button>:null}
+            </div>
+          </div>
+          <button onClick={saveBanners} disabled={bnrSaving} style={{background:"#25D366",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",opacity:bnrSaving?.5:1}}>{bnrSaving?"⏳ Kaydediliyor...":"💾 Bannerları Kaydet & Yayınla"}</button>
+        </div>
+        {msgBox(bnrMsg)}
+        <div style={{fontSize:10,color:"var(--txt3)",marginTop:8,lineHeight:1.6}}>JPG, PNG, GIF (animasyonlu), WebP desteklenir. Önerilen: 540×200px. Maks 5 banner.</div>
       </div>)}
 
       {/* ══ EV İNTERNETİ BELGELERİ ══ */}
