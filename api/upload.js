@@ -20,15 +20,7 @@ export default async function handler(req, res) {
     if (!targetData) return res.status(400).json({ error: 'Veri yok' });
 
     // Allowed files whitelist
-    const ALLOWED = [
-      'public/devices.json',
-      'public/promos.json',
-      'public/chatbot_kb_extra.json',
-      'public/chatbot_kb_main.json',
-      'public/tariffs_custom.json',
-      'public/evinternet_docs.json',
-      'public/evinternet_tariffs.json'
-    ];
+    const ALLOWED = ['public/devices.json', 'public/promos.json', 'public/chatbot_kb_extra.json', 'public/chatbot_kb_main.json', 'public/tariffs_custom.json', 'public/banners.json', 'public/evinternet_docs.json', 'public/evinternet_tariffs.json'];
     if (!ALLOWED.includes(targetFile)) return res.status(400).json({ error: 'Gecersiz dosya: ' + targetFile });
 
     const REPO = 'abban42/elfin-iletisim';
