@@ -1,3 +1,4 @@
+import {useState, useEffect} from "react";
 // ================================================================
 // ELFIN İLETİŞİM — EK BİLEŞENLER
 // Bu dosyadaki 3 bileşeni App.jsx'e ekleyin
