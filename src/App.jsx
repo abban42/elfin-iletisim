@@ -212,7 +212,8 @@ export default function App(){
 
       {/* CHATBOT */}
       <ChatBot />
-
+<ChatBot />
+<WhatsAppFloat />
       {showBildirim&&<BildirimKayitModal onClose={()=>setShowBildirim(false)} />}
       {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} dynBanners={dynBanners} setDynBanners={setDynBanners} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} chatbotMain={chatbotMain} setChatbotMain={setChatbotMain} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} evInternetTariffs={evInternetTariffs} setEvInternetTariffs={setEvInternetTariffs} marketMargin={marketMargin} setMarketMargin={updateMargin} marketPrices={marketPrices} refreshMarket={refreshMarket} marketLoading={marketLoading} onClose={()=>setShowAdmin(false)} />}
 
@@ -387,5 +388,10 @@ function Home({onNav,devices,marketPrices,marketMargin,marketLoading,banners}){
           ))}
         </div>
       </div>
+      </div>
+  <SiziArayalim />
       {/* STATS */}
+      <GuvenBolumu />
+<HatTransferiAdimlar />
+<div className="stat-grid" ...
       <div className="stat-grid" style={{d
