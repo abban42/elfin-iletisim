@@ -301,7 +301,7 @@ function HomeBanners({banners,onNav}){
     {title:"ANINDA 200 TL ALIŞVERİŞ ÇEKİ",label:"2026 SONUNA KADAR",subtitle:"Faturalıya Geçiş veya Yeni Hat Alımına",desc:"+ iPHONE 15 ÇEKİLİŞİ — Her faturalı işleme çekiliş hakkı!",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"tariff"},
     {title:"5G ARTIK AKTİF!",subtitle:"Galaxy S25 • iPhone 15 • Vivo Y29S • Samsung A17 5G",desc:"Turkcell 5G ile geleceğe hazır olun!",bg:"linear-gradient(135deg,#0d7c3d,#15a050)",color:"#fff",action:"phone"},
   ];
-  const items=(banners&&banners.length>0)?banners:defaultBanners;
+  const items=(banners!==null&&banners!==undefined)?(banners.length>0?banners:[]):defaultBanners;
   if(!items||items.length===0)return null;
   return(<div style={{display:"flex",flexDirection:"column",gap:10,maxWidth:540,margin:"0 auto 14px"}}>
     {lightbox?<div onClick={()=>setLightbox(null)} style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.85)",display:"flex",alignItems:"center",justifyContent:"center",padding:16,cursor:"zoom-out"}}><img src={lightbox} alt="" style={{maxWidth:"95vw",maxHeight:"90vh",borderRadius:12,objectFit:"contain",boxShadow:"0 8px 40px rgba(0,0,0,.5)"}} onClick={e=>{e.stopPropagation();setLightbox(null)}}/><button onClick={()=>setLightbox(null)} style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,.2)",border:"none",color:"#fff",width:36,height:36,borderRadius:18,fontSize:18,cursor:"pointer"}}>✕</button></div>:null}
