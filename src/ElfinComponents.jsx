@@ -105,7 +105,7 @@ export function HatTransferiAdimlar() {
     { num: "02", icon: "📋", title: "Paket Seçimi", desc: "Size en uygun Turkcell tarifesini birlikte belirleriz. Fiyat, kapsam, avantaj hepsi netleşir.", sure: "5 dk" },
     { num: "03", icon: "📍", title: "Mağazaya Gelin", desc: "Sadece nüfus cüzdanınızla Zafer Meydanı mağazamıza gelin. Geri kalanını biz hallederiz.", sure: "10 dk" },
     { num: "04", icon: "🔄", title: "Transfer Başlatılır", desc: "Numara taşıma Turkcell sisteminde başlatılır. Mevcut numaranız korunur.", sure: "Aynı gün" },
-    { num: "05", icon: "✅", title: "Hattınız Aktif!", desc: "İşlem tamamdır. Aynı numaranızla Turkcell'de kullanmaya başlarsınız.", sure: "1-4 saat" },
+    { num: "05", icon: "✅", title: "İşlem tamam!", desc: "İşlem tamamdır. Aynı numaranızla Turkcell'de kullanmaya başlarsınız.", sure: "2-3 gün" },
   ];
   return (
     <>
