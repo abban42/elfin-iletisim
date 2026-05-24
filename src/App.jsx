@@ -123,6 +123,10 @@ export default function App(){
       if(d&&Array.isArray(d.banners)){setDynBanners(d.banners);console.log("[Elfin] banners.json yüklendi:",d.banners.length,"banner")}
     }).catch(()=>{});
 
+    fetch("/youtube.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
+      if(d&&d.videoId){setYtVideoId(d.videoId);try{localStorage.setItem("elfin_yt_video",d.videoId)}catch(e){}console.log("[Elfin] youtube.json yüklendi:",d.videoId)}
+    }).catch(()=>{});
+
     fetch("/chatbot_kb_main.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
       if(d&&d.content){setChatbotMain(d.content);console.log("[Elfin] chatbot_kb_main.json yüklendi:",d.content.length,"karakter")}
     }).catch(()=>console.log("[Elfin] chatbot_kb_main.json yok, fallback kullanılıyor"));
@@ -1103,17 +1107,25 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
   // YouTube state
   const[ytInput,setYtInput]=useState(ytVideoId||"c0auba45bZU");
   const[ytMsg,setYtMsg]=useState("");
-  const saveYt=()=>{
+  const[ytSaving,setYtSaving]=useState(false);
+  const saveYt=async()=>{
     const raw=ytInput.trim();
-    // URL'den ID çıkar
     let id=raw;
     const m=raw.match(/(?:youtu\.be\/|youtube\.com\/(?:shorts\/|watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/);
     if(m)id=m[1];
     if(!id||id.length<8){setYtMsg("❌ Geçersiz video linki veya ID");return}
-    setYtVideoId(id);
-    try{localStorage.setItem("elfin_yt_video",id)}catch(e){}
-    setYtMsg("✅ Video güncellendi! Sayfa yenilenince aktif olur.");
-    setYtInput(id);
+    setYtSaving(true);setYtMsg("Kaydediliyor...");
+    try{
+      const res=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",file:"public/youtube.json",data:{videoId:id,_updated:new Date().toISOString()},message:"YouTube video guncelleme"})});
+      const d=await res.json();
+      if(d.success){
+        setYtVideoId(id);
+        try{localStorage.setItem("elfin_yt_video",id)}catch(e){}
+        setYtMsg("✅ Video kaydedildi! ~30sn içinde tüm cihazlarda aktif.");
+        setYtInput(id);
+      }else{setYtMsg("❌ "+d.error)}
+    }catch(e){setYtMsg("❌ "+e.message)}
+    setYtSaving(false);
   };
   // Banner state
   const defBnrs=[{title:"ANINDA 200 TL ALIŞVERİŞ ÇEKİ",label:"2026 SONUNA KADAR",subtitle:"Faturalıya Geçiş veya Yeni Hat Alımına",desc:"+ iPHONE 15 ÇEKİLİŞİ",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"tariff",image:""},{title:"5G ARTIK AKTİF!",label:"",subtitle:"Galaxy S25 • iPhone 15 • Vivo Y29S",desc:"Turkcell 5G ile geleceğe hazır olun!",bg:"linear-gradient(135deg,#0d7c3d,#15a050)",color:"#fff",action:"phone",image:""}];
@@ -2017,7 +2029,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
             <div style={{fontSize:9,color:"var(--txt3)",padding:"4px 8px",background:"var(--bg2)"}}>Önizleme</div>
             <img src={`https://img.youtube.com/vi/${(ytInput.match(/(?:youtu\.be\/|youtube\.com\/(?:shorts\/|watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/)||[,""])[1]||ytInput}/hqdefault.jpg`} alt="" style={{width:"100%",display:"block",aspectRatio:"16/9",objectFit:"cover"}} onError={e=>{e.target.style.opacity=".3"}}/>
           </div>}
-          <button onClick={saveYt} style={{background:"#FF0000",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",width:"100%"}}>▶ Videoyu Güncelle</button>
+          <button onClick={saveYt} disabled={ytSaving} style={{background:"#FF0000",border:"none",borderRadius:8,padding:"10px 20px",color:"#fff",fontWeight:800,fontSize:12,cursor:"pointer",fontFamily:"inherit",width:"100%",opacity:ytSaving?.6:1}}>{ytSaving?"⏳ Kaydediliyor...":"▶ Videoyu Güncelle & Tüm Cihazlara Yayınla"}</button>
           {ytMsg&&<div style={{marginTop:8,padding:"8px 12px",borderRadius:8,background:ytMsg.startsWith("✅")?"#e8f5e9":"#fdecea",color:ytMsg.startsWith("✅")?"#2e7d32":"#c62828",fontSize:11,fontWeight:600}}>{ytMsg}</div>}
         </div>
         <div style={{background:"var(--blt)",borderRadius:10,padding:14}}>
