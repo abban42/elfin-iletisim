@@ -1140,12 +1140,27 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
   const[bnrImgUploading,setBnrImgUploading]=useState(false);
   const uploadBnrImage=async function(file){
     if(!file)return;
-    if(file.size>5*1024*1024){setBnrMsg("❌ Dosya çok büyük (max 5MB)");return}
-    setBnrImgUploading(true);setBnrMsg("📷 Resim yükleniyor...");
+    if(file.size>3*1024*1024){setBnrMsg("❌ Dosya çok büyük (max 3MB)");return}
+    setBnrImgUploading(true);setBnrMsg("📷 Resim GitHub'a yükleniyor...");
     try{
       var reader=new FileReader();
       reader.onload=async function(){
         var base64=reader.result;
+        var safeName=Date.now()+"_"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+        var res=await fetch("/api/upload-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",imageData:base64,fileName:safeName})});
+        var d=await res.json();
+        if(d.success&&d.url){
+          setBnrForm(function(prev){return Object.assign({},prev,{image:d.url})});
+          setBnrMsg("✅ Resim yüklendi!");
+        }else{
+          setBnrMsg("❌ "+(d.error||"Yükleme başarısız"));
+        }
+        setBnrImgUploading(false);
+      };
+      reader.onerror=function(){setBnrMsg("❌ Dosya okunamadı");setBnrImgUploading(false)};
+      reader.readAsDataURL(file);
+    }catch(e){setBnrMsg("❌ "+e.message);setBnrImgUploading(false)}
+  };
         var ext=file.name.split(".").pop().toLowerCase();
         var safeName="banner_"+Date.now()+"."+ext;
         var res=await fetch("/api/upload-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",imageData:base64,fileName:safeName})});
@@ -2001,7 +2016,7 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Alt Yazı</label><input value={bnrForm.subtitle||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{subtitle:e.target.value}))}} placeholder="Galaxy S25 • iPhone 15..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Açıklama</label><input value={bnrForm.desc||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{desc:e.target.value}))}} placeholder="+ iPHONE 15 ÇEKİLİŞİ..." style={{width:"100%",border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/></div>
             </div>
-            <div style={{marginTop:8}}><label style={{fontSize:9,color:"var(--txt3)"}}>📷 Görsel URL</label><div style={{display:"flex",gap:6,marginTop:3}}><input value={bnrForm.image||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{image:e.target.value}))}} placeholder="https://... (imgbb.com veya drive.google.com)" style={{flex:1,border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/><a href="https://imgbb.com" target="_blank" rel="noreferrer" style={{background:"#7B61FF",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",textDecoration:"none",display:"flex",alignItems:"center"}}>📤 imgBB</a></div><div style={{fontSize:9,color:"var(--txt3)",marginTop:3}}>imgBB'ye yükle → "Direct link"i buraya yapıştır. Önerilen boyut: 540×200px</div>{bnrForm.image?<img src={bnrForm.image} alt="" style={{width:"100%",maxHeight:100,objectFit:"cover",borderRadius:6,marginTop:4}} onError={function(e){e.target.style.display="none"}}/>:null}</div>
+            <div style={{marginTop:8}}><label style={{fontSize:9,color:"var(--txt3)"}}>📷 Görsel</label><div style={{display:"flex",gap:6,marginTop:3}}><input value={bnrForm.image||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{image:e.target.value}))}} placeholder="URL otomatik gelir veya yapıştır" style={{flex:1,border:"1px solid var(--brd)",borderRadius:6,padding:"6px 8px",fontSize:11,fontFamily:"inherit",outline:"none"}}/><input ref={bnrImgRef} type="file" accept="image/*" onChange={function(e){if(e.target.files[0])uploadBnrImage(e.target.files[0])}} style={{display:"none"}}/><button onClick={function(){bnrImgRef.current.click()}} disabled={bnrImgUploading} style={{background:"#7B61FF",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",fontWeight:700,fontSize:10,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",opacity:bnrImgUploading?.5:1}}>{bnrImgUploading?"⏳":"📁 Yükle"}</button></div><div style={{fontSize:9,color:"var(--txt3)",marginTop:3}}>Galeriden seç → GitHub'a otomatik yüklenir. Instagram görseli (1080×1080) önerilir.</div>{bnrForm.image?<img src={bnrForm.image} alt="" style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:6,marginTop:4}} onError={function(e){e.target.style.display="none"}}/>:null}</div>
             <div style={{display:"flex",gap:8,marginTop:8,alignItems:"end",flexWrap:"wrap"}}>
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Arka Plan</label><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{bgOpts.map(function(c,ci){return <div key={ci} onClick={function(){setBnrForm(Object.assign({},bnrForm,{bg:c}))}} style={{width:20,height:20,borderRadius:4,background:c,cursor:"pointer",border:bnrForm.bg===c?"2px solid #000":"2px solid transparent"}}/>})}</div></div>
               <div><label style={{fontSize:9,color:"var(--txt3)"}}>Tıklayınca</label><select value={bnrForm.action||""} onChange={function(e){setBnrForm(Object.assign({},bnrForm,{action:e.target.value}))}} style={{border:"1px solid var(--brd)",borderRadius:6,padding:"5px 8px",fontSize:10,fontFamily:"inherit"}}><option value="">Yok</option>{actionOpts.map(function(a){return <option key={a.v} value={a.v}>{a.l}</option>})}</select></div>
