@@ -1,13 +1,10 @@
 import {useState, useEffect} from "react";
 // ================================================================
 // ELFIN İLETİŞİM — EK BİLEŞENLER
-// Bu dosyadaki 3 bileşeni App.jsx'e ekleyin
 // ================================================================
 
 // ───────────────────────────────────────────────────────────────
 // 1. SABİT WHATSAPP BUTONU
-//    App.jsx'te <ChatBot /> satırının hemen altına ekleyin:
-//    <WhatsAppFloat />
 // ───────────────────────────────────────────────────────────────
 export function WhatsAppFloat() {
   const phone = "905326822277";
@@ -15,11 +12,11 @@ export function WhatsAppFloat() {
   return (
     <>
       <style>{`
-        .wa-float{position:fixed;bottom:80px;right:20px;z-index:8888;display:flex;align-items:center;gap:9px;background:#25D366;color:#fff;border-radius:50px;padding:13px 20px;font-family:inherit;font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 4px 20px rgba(37,211,102,.45);transition:all .25s;animation:waPop 2.8s infinite}
+        .wa-float{position:fixed;bottom:80px;left:16px;right:auto;z-index:8888;display:flex;align-items:center;gap:9px;background:#25D366;color:#fff;border-radius:50px;padding:13px 20px;font-family:inherit;font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 4px 20px rgba(37,211,102,.45);transition:all .25s;animation:waPop 2.8s infinite}
         .wa-float:hover{transform:scale(1.07);box-shadow:0 6px 28px rgba(37,211,102,.65);background:#20c05e}
         .wa-float svg{width:22px;height:22px;flex-shrink:0}
         @keyframes waPop{0%,100%{box-shadow:0 4px 20px rgba(37,211,102,.45)}50%{box-shadow:0 4px 32px rgba(37,211,102,.75)}}
-        @media(max-width:480px){.wa-float span{display:none}.wa-float{padding:14px;border-radius:50%;bottom:90px}}
+        @media(max-width:480px){.wa-float span{display:none}.wa-float{padding:14px;border-radius:50%;bottom:90px;left:16px;right:auto}}
       `}</style>
       <a
         href={`https://wa.me/${phone}?text=${msg}`}
@@ -38,9 +35,6 @@ export function WhatsAppFloat() {
 
 // ───────────────────────────────────────────────────────────────
 // 2. GÜVEN BÖLÜMİ
-//    Home bileşeninin içinde, <div className="stat-grid" ...>
-//    satırının hemen ÖNÜNE ekleyin:
-//    <GuvenBolumu />
 // ───────────────────────────────────────────────────────────────
 export function GuvenBolumu() {
   const items = [
@@ -78,7 +72,6 @@ export function GuvenBolumu() {
             </div>
           ))}
         </div>
-        {/* Kimlik uyarısı */}
         <div style={{ background: "linear-gradient(135deg,var(--acc,#253B80),#1a2d66)", borderRadius: 12, padding: "12px 16px", display: "flex", gap: 10, alignItems: "flex-start" }}>
           <span style={{ fontSize: 20, flexShrink: 0 }}>🪪</span>
           <div>
@@ -95,9 +88,6 @@ export function GuvenBolumu() {
 
 // ───────────────────────────────────────────────────────────────
 // 3. HAT TRANSFERİ ADIM ADIM
-//    Tariff sayfasının (TariffPage bileşeni) EN ÜSTÜNE ekleyin:
-//    <HatTransferiAdimlar />
-//    VEYA Home bileşeninde GuvenBolumu'nun hemen altına.
 // ───────────────────────────────────────────────────────────────
 export function HatTransferiAdimlar() {
   const steps = [
@@ -152,14 +142,9 @@ export function HatTransferiAdimlar() {
 
 // ───────────────────────────────────────────────────────────────
 // 4. "SİZİ ARAYALIM" FORMU
-//    Home bileşeninde, hero-btns div'inin HEMEN ALTINA ekleyin:
-//    <SiziArayalim />
-//
-//    KURULUM: formspree.io → ücretsiz kayıt → form oluştur
-//    → Form ID'yi aşağıdaki FORM_ID ile değiştirin
 // ───────────────────────────────────────────────────────────────
 export function SiziArayalim() {
-  const FORM_ID = "mykvpzea"; // <-- formspree.io'dan aldığınız ID
+  const FORM_ID = "mykvpzea";
   const [phone, setPhone] = useState("");
   const [topic, setTopic] = useState("hat-transfer");
   const [status, setStatus] = useState("idle");
