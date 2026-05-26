@@ -1249,17 +1249,6 @@ function AdminPanel({tariffs,setTariffs,devices,dynPromos,setDynPromos,dynBanner
       reader.readAsDataURL(file);
     }catch(e){setBnrMsg("❌ "+e.message);setBnrImgUploading(false)}
   };
-        var ext=file.name.split(".").pop().toLowerCase();
-        var safeName="banner_"+Date.now()+"."+ext;
-        var res=await fetch("/api/upload-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:"elfin2026",imageData:base64,fileName:safeName})});
-        var d=await res.json();
-        if(d.success){setBnrForm(Object.assign({},bnrForm,{image:d.url}));setBnrMsg("✅ Resim yüklendi: "+d.url+" (~30sn sonra görünür)")}
-        else{setBnrMsg("❌ "+d.error)}
-        setBnrImgUploading(false);
-      };
-      reader.readAsDataURL(file);
-    }catch(e){setBnrMsg("❌ "+e.message);setBnrImgUploading(false)}
-  };
   const startBnrEdit=(i)=>{setBnrEditIdx(i);setBnrForm(i===null?{title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""}:{...bnrs[i]})};
   const saveBnrEdit=()=>{if(!bnrForm.title)return;const np=[...bnrs];if(bnrEditIdx===null)np.push({...bnrForm});else np[bnrEditIdx]={...bnrForm};setBnrs(np);setBnrEditIdx(null);setBnrForm({title:"",label:"",subtitle:"",desc:"",bg:"linear-gradient(135deg,#253B80,#1a2d62)",color:"#fff",action:"",image:""})};
   const deleteBnr=(i)=>{if(window.confirm("Bu banner'ı silmek istediğinize emin misiniz?"))setBnrs(bnrs.filter(function(_,j){return j!==i}))};
