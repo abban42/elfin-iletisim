@@ -71,6 +71,9 @@ body{background:var(--bg2)}
 .back-fab{position:fixed;bottom:90px;right:20px;z-index:90;width:44px;height:44px;border-radius:50%;background:var(--acc);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:0 4px 16px rgba(37,59,128,.3);display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:inherit}
 .back-fab:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(37,59,128,.4)}
 .back-fab:active{transform:scale(.95)}
+/* WhatsApp butonu sola taşı */
+.whatsapp-float-btn{left:16px!important;right:auto!important}
+/* AI asistan sağda kalsın, WhatsApp solda */
 @keyframes chatSlideUp{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes chatDot{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
 .chat-panel{animation:chatSlideUp .3s ease-out forwards}
@@ -98,7 +101,7 @@ export default function App(){
   const[chatbotMain,setChatbotMain]=useState("");
   const[dynPromos,setDynPromos]=useState(null);
   const[dynBanners,setDynBanners]=useState(null);
-  const[ytVideoId,setYtVideoId]=useState(()=>{try{return localStorage.getItem("elfin_yt_video")||""}catch(e){return "c0auba45bZU"}});
+  const[ytVideoId,setYtVideoId]=useState(()=>{try{return localStorage.getItem("elfin_yt_video")||"c0auba45bZU"}catch(e){return "c0auba45bZU"}});
   const[evInternetDocs,setEvInternetDocs]=useState([]);
   const[evInternetTariffs,setEvInternetTariffs]=useState(null);
   const[marketPrices,setMarketPrices]=useState(null);
@@ -116,7 +119,7 @@ export default function App(){
     }).catch(()=>console.log("[Elfin] devices.json yok, gömülü veri kullanılıyor"));
 
     fetch("/promos.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
-      if(d&&Array.isArray(d.promos)&&d.promos.length>0){setDynPromos(d.promos);console.log("[Elfin] promos.json yüklendi:",d.promos.length,"reklam")}
+      if(d&&Array.isArray(d.promos)){setDynPromos(d.promos);console.log("[Elfin] promos.json yüklendi:",d.promos.length,"reklam")}
     }).catch(()=>{});
 
     fetch("/banners.json?t="+Date.now()).then(r=>{if(r.ok)return r.json();throw new Error()}).then(d=>{
@@ -217,13 +220,15 @@ export default function App(){
 
       {/* CHATBOT */}
       <ChatBot />
-      <WhatsAppFloat />
+      <div style={{position:"fixed",bottom:20,left:16,zIndex:9998}}>
+        <WhatsAppFloat />
+      </div>
 
       {showBildirim&&<BildirimKayitModal onClose={()=>setShowBildirim(false)} />}
       {showAdmin&&<AdminPanel tariffs={tariffs} setTariffs={setTariffs} devices={devices} dynPromos={dynPromos} setDynPromos={setDynPromos} dynBanners={dynBanners} setDynBanners={setDynBanners} chatbotExtra={chatbotExtra} setChatbotExtra={setChatbotExtra} chatbotMain={chatbotMain} setChatbotMain={setChatbotMain} evInternetDocs={evInternetDocs} setEvInternetDocs={setEvInternetDocs} evInternetTariffs={evInternetTariffs} setEvInternetTariffs={setEvInternetTariffs} marketMargin={marketMargin} setMarketMargin={updateMargin} marketPrices={marketPrices} refreshMarket={refreshMarket} marketLoading={marketLoading} ytVideoId={ytVideoId} setYtVideoId={setYtVideoId} onClose={()=>setShowAdmin(false)} />}
 
       <main style={{maxWidth:1440,margin:"0 auto",padding:"0 20px"}}>
-        {page==="home"&&<Home onNav={navigate} devices={devices} marketPrices={marketPrices} marketMargin={marketMargin} marketLoading={marketLoading} banners={dynBanners} ytVideo={ytVideoId}/>}
+        {page==="home"&&<Home onNav={navigate} devices={devices} marketPrices={marketPrices} marketMargin={marketMargin} marketLoading={marketLoading} banners={dynBanners} ytVideo={ytVideoId} tariffs={tariffs}/>}
         {page==="phone"&&<DevicePage data={devices.phone} title="Akıllı Telefonlar" sub={`${devices.phone.length} model — Tüm Turkcell taksit seçenekleri`} backRef={backRef}/>}
         {page==="tablet"&&<DevicePage data={devices.tablet} title="Tabletler" sub={`${devices.tablet.length} model`} backRef={backRef}/>}
         {page==="notebook"&&<DevicePage data={devices.notebook} title="Notebooklar" sub={`${devices.notebook.length} model`} backRef={backRef}/>}
@@ -339,7 +344,7 @@ function PromoCarousel({onNav,dynPromos}){
     {title:"🎁 200 TL Alışveriş Çeki",sub:"Her Faturalı Hat Geçişinde",desc:"Numara taşıma veya yeni hat al, 200 TL çek kazan + iPhone 15 çekilişi!",color:"#25D366",action:"tariff"},
     {title:"⚡ 1 Nisan'da 5G!",sub:"5G Uyumlu Cihazlar Hazır",desc:"Galaxy S25-S26 • iPhone 15-17 • Vivo Y29S • Samsung A17 5G",color:"#0d7c3d",action:"phone"},
   ];
-  const promos=(dynPromos&&dynPromos.length>0)?dynPromos:defaultPromos;
+  const promos=(dynPromos!==null&&dynPromos!==undefined)?(dynPromos.length>0?dynPromos:[]):defaultPromos;
   useEffect(()=>{const t=setInterval(()=>setIdx(i=>(i+1)%promos.length),4000);return()=>clearInterval(t)},[promos.length]);
   useEffect(()=>{if(idx>=promos.length)setIdx(0)},[promos.length]);
   const p=promos[idx%promos.length]||promos[0];
@@ -364,6 +369,86 @@ function PromoCarousel({onNav,dynPromos}){
       </div>
     </div>
   );
+}
+
+/* ═══ KAMPANYA BANNERLER ═══ */
+function KampanyaBannerler({devices,tariffs}){
+  const[acik,setAcik]=useState(null);
+  const phones=(devices?.phone||ALL_PHONES.map((p,i)=>({id:i,marka:p.m,model:p.n,pesin:p.p}))).filter(p=>p.pesin>0);
+  const fmt=n=>n?n.toLocaleString("tr-TR"):"—";
+
+  // En ucuz 5 telefon (tekil model)
+  const ucuzTel=[...phones].sort((a,b)=>(a.pesin||0)-(b.pesin||0))
+    .filter((p,i,arr)=>arr.findIndex(x=>x.model===p.model)===i)
+    .slice(0,5);
+
+  // Faturalı tarifeler
+  const faturaliCats=(tariffs||TARIFF_CATS).filter(c=>c.tip==="faturali").slice(0,4);
+  // Kontörlü tarifeler
+  const konturluCats=(tariffs||TARIFF_CATS).filter(c=>c.tip==="onodemeli").slice(0,4);
+  // Switch (kontörlüden faturalıya)
+  const switchCat=(tariffs||TARIFF_CATS).find(c=>c.ad&&c.ad.includes("Prestij"));
+  // SuperBox
+  const superboxDevices=(devices?.phone||ALL_PHONES.map((p,i)=>({id:i,marka:p.m,model:p.n,pesin:p.p}))).filter(p=>p.model&&p.model.includes("SUPERBOX")).slice(0,5);
+
+  const banners=[
+    {id:"tel",ikon:"📱",baslik:"TELEFON KAMPANYASI",renk:"linear-gradient(135deg,#253B80,#3A5BC7)",icerik:
+      <div>{ucuzTel.map((p,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
+        <div style={{fontSize:11,fontWeight:600,color:"#fff",flex:1}}>{p.marka} {p.model}</div>
+        <div style={{fontSize:13,fontWeight:900,color:"#FFC72C",whiteSpace:"nowrap"}}>₺{fmt(p.pesin)}</div>
+      </div>)}</div>
+    },
+    {id:"fat",ikon:"📋",baslik:"FATURALI TARİFELER",renk:"linear-gradient(135deg,#0d7c3d,#1a9e4f)",icerik:
+      <div>{faturaliCats.map((c,i)=><div key={i} style={{marginBottom:8}}>
+        <div style={{fontSize:11,fontWeight:800,color:"#FFC72C",marginBottom:3}}>{c.ikon} {c.ad}</div>
+        {c.tarifeler.slice(0,2).map((t,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:10,color:"rgba(255,255,255,.85)"}}>
+          <span>{t.ad}</span><span style={{fontWeight:700,color:"#fff"}}>₺{t.fiyat}/ay</span>
+        </div>)}
+      </div>)}</div>
+    },
+    {id:"kon",ikon:"📦",baslik:"KONTÖRLÜ TARİFELER",renk:"linear-gradient(135deg,#7B61FF,#9b84ff)",icerik:
+      <div>{konturluCats.map((c,i)=><div key={i} style={{marginBottom:8}}>
+        <div style={{fontSize:11,fontWeight:800,color:"#FFC72C",marginBottom:3}}>{c.ikon} {c.ad}</div>
+        {c.tarifeler.slice(0,2).map((t,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:10,color:"rgba(255,255,255,.85)"}}>
+          <span>{t.ad}</span><span style={{fontWeight:700,color:"#fff"}}>₺{t.fiyat}</span>
+        </div>)}
+      </div>)}</div>
+    },
+    {id:"swt",ikon:"🔄",baslik:"KONTÖRLÜDEN FATURALIYA",renk:"linear-gradient(135deg,#E17055,#d63031)",icerik:
+      <div>{switchCat?switchCat.tarifeler.slice(0,5).map((t,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
+        <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:"#fff"}}>{t.ad}</div><div style={{fontSize:9,color:"rgba(255,255,255,.7)"}}>{t.icerik}</div></div>
+        <div style={{fontSize:13,fontWeight:900,color:"#FFC72C",whiteSpace:"nowrap"}}>₺{t.fiyat}/ay</div>
+      </div>):<div style={{color:"#fff",fontSize:11}}>Switch tarifeleri için mağazamıza gelin.</div>}</div>
+    },
+    {id:"sup",ikon:"📡",baslik:"SUPERBOX KAMPANYASI",renk:"linear-gradient(135deg,#00B4D8,#0077B6)",icerik:
+      <div>{superboxDevices.length>0?superboxDevices.map((p,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
+        <div style={{fontSize:11,fontWeight:600,color:"#fff",flex:1}}>{p.model}</div>
+        <div style={{fontSize:13,fontWeight:900,color:"#FFC72C",whiteSpace:"nowrap"}}>₺{fmt(p.pesin)}</div>
+      </div>):<div style={{color:"rgba(255,255,255,.8)",fontSize:11,lineHeight:1.6}}>Turkcell Superbox ile ev ve ofisinde hızlı internet. Detaylar için mağazamızı ziyaret edin.</div>}</div>
+    },
+  ];
+
+  return(<div style={{marginBottom:20}}>
+    <div style={{fontSize:11,fontWeight:700,color:"var(--txt2)",marginBottom:10,paddingLeft:2}}>📢 Kampanyalar & Tarifeler</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
+      {banners.map(b=>(
+        <div key={b.id} onClick={()=>setAcik(acik===b.id?null:b.id)}
+          style={{background:b.renk,borderRadius:12,padding:"10px 8px",cursor:"pointer",transition:"transform .2s",transform:acik===b.id?"scale(.97)":"scale(1)",boxShadow:"0 4px 14px rgba(0,0,0,.15)"}}>
+          <div style={{fontSize:22,textAlign:"center",marginBottom:4}}>{b.ikon}</div>
+          <div style={{fontSize:8,fontWeight:800,color:"#fff",textAlign:"center",lineHeight:1.3}}>{b.baslik}</div>
+        </div>
+      ))}
+    </div>
+    {acik&&(()=>{const b=banners.find(x=>x.id===acik);return b?
+      <div style={{marginTop:8,background:b.renk,borderRadius:14,padding:"16px",animation:"fadeUp .2s ease-out"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{fontSize:13,fontWeight:900,color:"#fff"}}>{b.ikon} {b.baslik}</div>
+          <button onClick={()=>setAcik(null)} style={{background:"rgba(255,255,255,.2)",border:"none",color:"#fff",width:24,height:24,borderRadius:12,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        </div>
+        {b.icerik}
+      </div>:null
+    })()}
+  </div>);
 }
 
 /* ═══ YOUTUBE CARD ═══ */
@@ -402,7 +487,7 @@ function YouTubeCard({videoId}){
 }
 
 /* ═══ HOME ═══ */
-function Home({onNav,devices,marketPrices,marketMargin,marketLoading,banners,ytVideo}){
+function Home({onNav,devices,marketPrices,marketMargin,marketLoading,banners,ytVideo,tariffs}){
   const applyMargin=(price)=>Math.round(price*(1+marketMargin/100));
   return(
     <div className="au" style={{paddingTop:32}}>
@@ -422,6 +507,9 @@ function Home({onNav,devices,marketPrices,marketMargin,marketLoading,banners,ytV
 
       {/* YOUTUBE VİDEO */}
       <YouTubeCard videoId={ytVideo}/>
+
+      {/* KAMPANYA BANNERLER */}
+      <KampanyaBannerler devices={devices} tariffs={tariffs}/>
 
       <SiziArayalim />
       <GuvenBolumu />
