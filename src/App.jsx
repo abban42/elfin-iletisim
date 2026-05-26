@@ -98,7 +98,7 @@ export default function App(){
   const[chatbotMain,setChatbotMain]=useState("");
   const[dynPromos,setDynPromos]=useState(null);
   const[dynBanners,setDynBanners]=useState(null);
-  const[ytVideoId,setYtVideoId]=useState(()=>{try{return localStorage.getItem("elfin_yt_video")||"c0auba45bZU"}catch(e){return "c0auba45bZU"}});
+  const[ytVideoId,setYtVideoId]=useState(()=>{try{return localStorage.getItem("elfin_yt_video")||""}catch(e){return "c0auba45bZU"}});
   const[evInternetDocs,setEvInternetDocs]=useState([]);
   const[evInternetTariffs,setEvInternetTariffs]=useState(null);
   const[marketPrices,setMarketPrices]=useState(null);
