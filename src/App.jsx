@@ -73,7 +73,8 @@ body{background:var(--bg2)}
 .back-fab:active{transform:scale(.95)}
 /* WhatsApp butonu sola taşı */
 .whatsapp-float-btn{left:16px!important;right:auto!important}
-/* AI asistan sağda kalsın, WhatsApp solda */
+/* ElfinComponents'tan gelen WhatsApp fixed butonunu sola zorla */
+a[href*="wa.me"][style*="fixed"],div[style*="25D366"][style*="fixed"]{left:16px!important;right:auto!important}
 @keyframes chatSlideUp{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes chatDot{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
 .chat-panel{animation:chatSlideUp .3s ease-out forwards}
@@ -384,12 +385,12 @@ function KampanyaBannerler({devices,tariffs}){
 
   // Faturalı tarifeler
   const faturaliCats=(tariffs||TARIFF_CATS).filter(c=>c.tip==="faturali").slice(0,4);
-  // Kontörlü tarifeler
-  const konturluCats=(tariffs||TARIFF_CATS).filter(c=>c.tip==="onodemeli").slice(0,4);
+  // Ön ödemeli tarifeler
+  const onOdemeliCats=(tariffs||TARIFF_CATS).filter(c=>c.tip==="onodemeli").slice(0,4);
   // Switch (kontörlüden faturalıya)
   const switchCat=(tariffs||TARIFF_CATS).find(c=>c.ad&&c.ad.includes("Prestij"));
-  // SuperBox
-  const superboxDevices=(devices?.phone||ALL_PHONES.map((p,i)=>({id:i,marka:p.m,model:p.n,pesin:p.p}))).filter(p=>p.model&&p.model.includes("SUPERBOX")).slice(0,5);
+  // Ev interneti tarifleri
+  const evInternetPlans=Array.isArray(devices?.evInternet)?devices.evInternet:[];
 
   const banners=[
     {id:"tel",ikon:"📱",baslik:"TELEFON KAMPANYASI",renk:"linear-gradient(135deg,#253B80,#3A5BC7)",icerik:
@@ -406,8 +407,8 @@ function KampanyaBannerler({devices,tariffs}){
         </div>)}
       </div>)}</div>
     },
-    {id:"kon",ikon:"📦",baslik:"KONTÖRLÜ TARİFELER",renk:"linear-gradient(135deg,#7B61FF,#9b84ff)",icerik:
-      <div>{konturluCats.map((c,i)=><div key={i} style={{marginBottom:8}}>
+    {id:"kon",ikon:"📦",baslik:"ÖN ÖDEMELİ TARİFELER",renk:"linear-gradient(135deg,#7B61FF,#9b84ff)",icerik:
+      <div>{onOdemeliCats.map((c,i)=><div key={i} style={{marginBottom:8}}>
         <div style={{fontSize:11,fontWeight:800,color:"#FFC72C",marginBottom:3}}>{c.ikon} {c.ad}</div>
         {c.tarifeler.slice(0,2).map((t,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:10,color:"rgba(255,255,255,.85)"}}>
           <span>{t.ad}</span><span style={{fontWeight:700,color:"#fff"}}>₺{t.fiyat}</span>
@@ -420,11 +421,22 @@ function KampanyaBannerler({devices,tariffs}){
         <div style={{fontSize:13,fontWeight:900,color:"#FFC72C",whiteSpace:"nowrap"}}>₺{t.fiyat}/ay</div>
       </div>):<div style={{color:"#fff",fontSize:11}}>Switch tarifeleri için mağazamıza gelin.</div>}</div>
     },
-    {id:"sup",ikon:"📡",baslik:"SUPERBOX KAMPANYASI",renk:"linear-gradient(135deg,#00B4D8,#0077B6)",icerik:
-      <div>{superboxDevices.length>0?superboxDevices.map((p,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
-        <div style={{fontSize:11,fontWeight:600,color:"#fff",flex:1}}>{p.model}</div>
-        <div style={{fontSize:13,fontWeight:900,color:"#FFC72C",whiteSpace:"nowrap"}}>₺{fmt(p.pesin)}</div>
-      </div>):<div style={{color:"rgba(255,255,255,.8)",fontSize:11,lineHeight:1.6}}>Turkcell Superbox ile ev ve ofisinde hızlı internet. Detaylar için mağazamızı ziyaret edin.</div>}</div>
+    {id:"sup",ikon:"🏠",baslik:"EV İNTERNETİ KAMPANYASI",renk:"linear-gradient(135deg,#00B4D8,#0077B6)",icerik:
+      <div>{evInternetPlans.length>0
+        ? evInternetPlans.slice(0,4).map((p,i)=><div key={i} style={{marginBottom:8}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#FFC72C",marginBottom:3}}>🏠 {p.ad||p.name}</div>
+            {(p.paketler||p.plans||[]).slice(0,2).map((pk,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:10,color:"rgba(255,255,255,.85)"}}>
+              <span>{pk.hiz||pk.speed}</span><span style={{fontWeight:700,color:"#fff"}}>₺{pk.fiyat||pk.price}/ay</span>
+            </div>)}
+          </div>)
+        : <div style={{color:"rgba(255,255,255,.85)",fontSize:11,lineHeight:1.8}}>
+            <div style={{marginBottom:6,fontWeight:700}}>🏠 Fiber İnternet</div>
+            <div style={{display:"flex",justifyContent:"space-between"}}><span>100 Mbps</span><span style={{fontWeight:700}}>₺800/ay</span></div>
+            <div style={{display:"flex",justifyContent:"space-between"}}><span>200 Mbps</span><span style={{fontWeight:700}}>₺900/ay</span></div>
+            <div style={{display:"flex",justifyContent:"space-between"}}><span>1000 Mbps</span><span style={{fontWeight:700}}>₺1.000/ay</span></div>
+            <div style={{marginTop:8,fontSize:9,color:"rgba(255,255,255,.7)"}}>12 ay taahhütlü • Detaylar için mağazamızı ziyaret edin</div>
+          </div>
+      }</div>
     },
   ];
 
@@ -886,7 +898,7 @@ function TariffPage({tariffs}){
       </div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center",marginBottom:16}}>
         <button onClick={()=>{setSelectedCat(null);setSelectedTariff(null)}} style={{background:!selectedCat?"var(--tc)":"#fff",color:!selectedCat?"var(--txt)":"var(--txt2)",border:"1px solid "+(!selectedCat?"var(--tc)":"var(--brd)"),borderRadius:8,padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Tümü</button>
-        {cats.map(c=>(<button key={c.ad} onClick={()=>{setSelectedCat(c.ad);setSelectedTariff(null)}} style={{background:selectedCat===c.ad?"var(--blt)":"#fff",color:selectedCat===c.ad?"var(--acc)":"var(--txt2)",border:`1px solid ${selectedCat===c.ad?"var(--acc)":"var(--brd)"}`,borderRadius:8,padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{c.ikon} {c.ad}</button>))}
+        {cats.filter(c=>c.tip===tip).map(c=>(<button key={c.ad} onClick={()=>{setSelectedCat(c.ad);setSelectedTariff(null)}} style={{background:selectedCat===c.ad?"var(--blt)":"#fff",color:selectedCat===c.ad?"var(--acc)":"var(--txt2)",border:`1px solid ${selectedCat===c.ad?"var(--acc)":"var(--brd)"}`,borderRadius:8,padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{c.ikon} {c.ad}</button>))}
       </div>
       {tip==="faturali"&&(<div style={{display:"flex",gap:6,overflowX:"auto",marginBottom:14,paddingBottom:4,WebkitOverflowScrolling:"touch"}}>
         {Object.entries(SART_INFO).map(([k,s])=>(<div key={k} style={{flex:"0 0 auto",background:"#fff",border:"1px solid var(--brd)",borderRadius:8,padding:"6px 12px",display:"flex",alignItems:"center",gap:6,minWidth:160,boxShadow:"var(--sh)"}}><span style={{fontSize:16}}>{s.i}</span><div><div style={{fontSize:10,fontWeight:700,color:s.r}}>{s.b}</div><div style={{fontSize:8,color:"var(--txt3)",lineHeight:1.2}}>{s.a}</div></div></div>))}
