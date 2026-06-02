@@ -407,20 +407,6 @@ function KampanyaBannerler({devices,tariffs}){
         </div>)}
       </div>)}</div>
     },
-    {id:"kon",ikon:"📦",baslik:"ÖN ÖDEMELİ TARİFELER",renk:"linear-gradient(135deg,#7B61FF,#9b84ff)",icerik:
-      <div>{onOdemeliCats.map((c,i)=><div key={i} style={{marginBottom:8}}>
-        <div style={{fontSize:11,fontWeight:800,color:"#FFC72C",marginBottom:3}}>{c.ikon} {c.ad}</div>
-        {c.tarifeler.slice(0,2).map((t,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",fontSize:10,color:"rgba(255,255,255,.85)"}}>
-          <span>{t.ad}</span><span style={{fontWeight:700,color:"#fff"}}>₺{t.fiyat}</span>
-        </div>)}
-      </div>)}</div>
-    },
-    {id:"swt",ikon:"🔄",baslik:"KONTÖRLÜDEN FATURALIYA",renk:"linear-gradient(135deg,#E17055,#d63031)",icerik:
-      <div>{switchCat?switchCat.tarifeler.slice(0,5).map((t,j)=><div key={j} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 0",borderBottom:"1px solid rgba(255,255,255,.1)"}}>
-        <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:"#fff"}}>{t.ad}</div><div style={{fontSize:9,color:"rgba(255,255,255,.7)"}}>{t.icerik}</div></div>
-        <div style={{fontSize:13,fontWeight:900,color:"#FFC72C",whiteSpace:"nowrap"}}>₺{t.fiyat}/ay</div>
-      </div>):<div style={{color:"#fff",fontSize:11}}>Switch tarifeleri için mağazamıza gelin.</div>}</div>
-    },
     {id:"sup",ikon:"🏠",baslik:"EV İNTERNETİ KAMPANYASI",renk:"linear-gradient(135deg,#00B4D8,#0077B6)",icerik:
       <div>{evInternetPlans.length>0
         ? evInternetPlans.slice(0,4).map((p,i)=><div key={i} style={{marginBottom:8}}>
@@ -442,7 +428,7 @@ function KampanyaBannerler({devices,tariffs}){
 
   return(<div style={{marginBottom:20}}>
     <div style={{fontSize:11,fontWeight:700,color:"var(--txt2)",marginBottom:10,paddingLeft:2}}>📢 Kampanyalar & Tarifeler</div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
       {banners.map(b=>(
         <div key={b.id} onClick={()=>setAcik(acik===b.id?null:b.id)}
           style={{background:b.renk,borderRadius:12,padding:"10px 8px",cursor:"pointer",transition:"transform .2s",transform:acik===b.id?"scale(.97)":"scale(1)",boxShadow:"0 4px 14px rgba(0,0,0,.15)"}}>
