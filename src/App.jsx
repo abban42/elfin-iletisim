@@ -746,24 +746,21 @@ function DeviceDetail({d,isAksesuar}){
 
 /* ═══ TARIFF PAGE ═══ */
 function TariffPage({tariffs}){
-  const[tip,setTip]=useState("faturali");const[gbMin,setGbMin]=useState(0);const[dkMin,setDkMin]=useState(0);const[selectedCat,setSelectedCat]=useState(null);const[selectedTariff,setSelectedTariff]=useState(null);
-  const cats=tariffs.filter(c=>c.tip===tip);
+  const[gbMin,setGbMin]=useState(0);const[dkMin,setDkMin]=useState(0);const[selectedCat,setSelectedCat]=useState(null);const[selectedTariff,setSelectedTariff]=useState(null);
+  // Faturalı/Ön Ödemeli üst filtresi kaldırıldı — alttaki kategori butonları yeterli
+  const cats=tariffs;
   const allT=cats.flatMap(c=>c.tarifeler.map(t=>({...t,kategori:c.ad,sart:c.sart,aciklama:c.aciklama,sure:c.sure,ikon:c.ikon,renk:c.renk,tip:c.tip})));
   const filtered=allT.filter(t=>{if(gbMin>0&&t.gb<gbMin)return false;if(dkMin>0&&t.dk<dkMin)return false;if(selectedCat&&t.kategori!==selectedCat)return false;return true}).sort((a,b)=>a.fiyat-b.fiyat);
   return(
     <div className="au" style={{paddingTop:28}}>
-      <div style={{textAlign:"center",marginBottom:18}}><h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(20px,3.5vw,30px)",fontWeight:800,color:"var(--acc)",marginBottom:4}}>Turkcell Tarifeleri</h2><p style={{fontSize:12,color:"var(--txt2)"}}>6 kategori, 26 tarife</p></div>
-      <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
-        {[{k:"faturali",l:"📄 Faturalı"},{k:"onodemeli",l:"💳 Ön Ödemeli"}].map(b=>(<button key={b.k} onClick={()=>{setTip(b.k);setSelectedCat(null);setSelectedTariff(null)}} style={{background:tip===b.k?"var(--acc)":"#fff",color:tip===b.k?"#fff":"var(--txt2)",border:tip===b.k?"none":"1px solid var(--brd)",borderRadius:12,padding:"10px 24px",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit",boxShadow:tip===b.k?"0 4px 10px rgba(37,59,128,.18)":"var(--sh)"}}>{b.l}</button>))}
-      </div>
+      <div style={{textAlign:"center",marginBottom:18}}><h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(20px,3.5vw,30px)",fontWeight:800,color:"var(--acc)",marginBottom:4}}>Turkcell Tarifeleri</h2><p style={{fontSize:12,color:"var(--txt2)"}}>{cats.length} kategori, {allT.length} tarife</p></div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"center",marginBottom:16}}>
         <button onClick={()=>{setSelectedCat(null);setSelectedTariff(null)}} style={{background:!selectedCat?"var(--tc)":"#fff",color:!selectedCat?"var(--txt)":"var(--txt2)",border:"1px solid "+(!selectedCat?"var(--tc)":"var(--brd)"),borderRadius:8,padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Tümü</button>
         {cats.map(c=>(<button key={c.ad} onClick={()=>{setSelectedCat(c.ad);setSelectedTariff(null)}} style={{background:selectedCat===c.ad?"var(--blt)":"#fff",color:selectedCat===c.ad?"var(--acc)":"var(--txt2)",border:`1px solid ${selectedCat===c.ad?"var(--acc)":"var(--brd)"}`,borderRadius:8,padding:"6px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{c.ikon} {c.ad}</button>))}
       </div>
-      {tip==="faturali"&&(<div style={{display:"flex",gap:6,overflowX:"auto",marginBottom:14,paddingBottom:4,WebkitOverflowScrolling:"touch"}}>
+      <div style={{display:"flex",gap:6,overflowX:"auto",marginBottom:14,paddingBottom:4,WebkitOverflowScrolling:"touch"}}>
         {Object.entries(SART_INFO).map(([k,s])=>(<div key={k} style={{flex:"0 0 auto",background:"#fff",border:"1px solid var(--brd)",borderRadius:8,padding:"6px 12px",display:"flex",alignItems:"center",gap:6,minWidth:160,boxShadow:"var(--sh)"}}><span style={{fontSize:16}}>{s.i}</span><div><div style={{fontSize:10,fontWeight:700,color:s.r}}>{s.b}</div><div style={{fontSize:8,color:"var(--txt3)",lineHeight:1.2}}>{s.a}</div></div></div>))}
-      </div>)}
-      {tip==="onodemeli"&&<div style={{background:"var(--blt)",border:"1px solid var(--brd)",borderRadius:8,padding:"8px 14px",marginBottom:14,fontSize:11,color:"var(--acc)",textAlign:"center",fontWeight:600}}>Ön ödemeli tarifelerde şart aranmaz.</div>}
+      </div>
       <div style={{background:"#fff",borderRadius:12,padding:14,border:"1px solid var(--brd)",marginBottom:16,boxShadow:"var(--sh)"}}>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:14}}>
           <RSlider label="🌐 Min. İnternet" value={gbMin} max={100} step={5} unit="GB" color="var(--acc)" onChange={setGbMin}/>
